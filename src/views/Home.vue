@@ -74,7 +74,7 @@
       <div class="card-image-wrapper">
         <el-image
           class="test-card-image"
-          :src="`/images/${test.id.split('-')[0]}-card.png`"
+          :src="publicPath(`images/${test.id.split('-')[0]}-card.png`)"
           fit="cover"
         >
           <template #placeholder>
@@ -119,6 +119,8 @@
 import { computed, ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { useI18n } from "vue-i18n";
+const baseUrl = import.meta.env.BASE_URL || '/'
+const publicPath = (path) => `${baseUrl}${path.replace(/^\/+/, '')}`
 // 引入专业的 Element Plus 图标替代 Emoji
 import { Clock, Document, Aim, Right, Picture } from "@element-plus/icons-vue";
 import ParticleBackground from "@/components/ParticleBackground.vue";
@@ -169,7 +171,7 @@ const updateQuestionCounts = async () => {
   for (const [key, meta] of Object.entries(testMeta)) {
     try {
       const currentLang = locale.value || "zh-CN";
-      const path = `/md/${currentLang}${meta.filePath}`;
+      const path = publicPath(`/md/${currentLang}${meta.filePath}`);
       const response = await fetch(path);
       if (response.ok) {
         const text = await response.text();

@@ -193,12 +193,15 @@ import {
 const router = useRouter()
 const { t, tm } = useI18n()
 
+const baseUrl = import.meta.env.BASE_URL || '/'
+const publicPath = (path) => `${baseUrl}${path.replace(/^\/+/, '')}`
+
 // 替换为 public 目录的路径，即使文件不存在，也会优雅降级为 placeholder
 const galleryImages = [
-  '/images/intro-preview-1.png',
-  '/images/intro-preview-2.png',
-  '/images/intro-preview-3.png',
-  '/images/intro-preview-4.png'
+  publicPath('images/intro-preview-1.png'),
+  publicPath('images/intro-preview-2.png'),
+  publicPath('images/intro-preview-3.png'),
+  publicPath('images/intro-preview-4.png')
 ]
 
 const pillarsIconMap = {

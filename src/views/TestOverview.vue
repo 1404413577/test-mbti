@@ -23,7 +23,7 @@
       <el-col :xs="24" :lg="13">
         <el-image 
           class="hero-main-image" 
-          src="/images/overview-hero.png" 
+          :src="publicPath('images/overview-hero.png')" 
           fit="cover"
         >
           <template #placeholder>
@@ -80,7 +80,7 @@
           </div>
           <el-image 
             class="timeline-side-image" 
-            src="/images/roadmap-side.png" 
+            :src="publicPath('images/roadmap-side.png')" 
             fit="contain"
           />
         </el-col>
@@ -113,16 +113,19 @@ import { Check, Right } from "@element-plus/icons-vue";
 const router = useRouter();
 const { t, tm } = useI18n();
 
+const baseUrl = import.meta.env.BASE_URL || '/'
+const publicPath = (path) => `${baseUrl}${path.replace(/^\/+/, '')}`
+
 const overviewSections = computed(() => tm("overview.sections") || []);
 const overviewTimeline = computed(() => tm("overview.timeline") || []);
 
 // 动态匹配图片逻辑
 const getSectionImage = (index) => {
   const images = [
-    '/images/mbti-cover.png',
-    '/images/eq-cover.png',
-    '/images/learning-cover.png',
-    '/images/big-five-cover.png'
+    publicPath('images/mbti-cover.png'),
+    publicPath('images/eq-cover.png'),
+    publicPath('images/learning-cover.png'),
+    publicPath('images/big-five-cover.png')
   ];
   return images[index] || images[0];
 };
