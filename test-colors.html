@@ -1,0 +1,41 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>结果页面测试</title>
+  <style>
+    body { margin: 0; padding: 20px; background: #f5f7fa; font-family: sans-serif; }
+    .test-container { max-width: 1200px; margin: 0 auto; }
+    .result-card { background: white; padding: 20px; margin: 20px 0; border-radius: 15px; border: 2px solid #e0e7ff; }
+    .title { font-size: 24px; font-weight: 700; color: #6366f1; margin-bottom: 15px; }
+    .description { color: #475569; line-height: 1.6; }
+    .white-text { color: white; }
+    .score-circle { width: 120px; height: 120px; border-radius: 50%; background: #10b981; display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 20px auto; }
+    .score-number { font-size: 2.5rem; font-weight: 700; color: #ffffff; }
+    .score-label { font-size: 0.9rem; color: #ffffff; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <div class="test-container">
+    <h1 style="text-align: center; color: #1e293b;">结果页面样式测试</h1>
+    
+    <div class="result-card">
+      <div class="title">标题文字 (应为蓝色 #6366f1)</div>
+      <div class="description">描述文字 (应为灰色 #475569) - 这是一段测试文字，用于检查在白色背景上的可读性。</div>
+    </div>
+
+    <div class="result-card">
+      <div class="score-circle">
+        <div class="score-number">95</div>
+        <div class="score-label">EQ分数</div>
+      </div>
+      <p style="text-align: center;">分数圆圈内的白色文字 (应可见，因为背景是绿色)</p>
+    </div>
+
+    <div class="result-card">
+      <div class="white-text">这是白色文字 (不应使用 - 在白色背景上不可见)</div>
+      <div style="color: #1e293b;">这是深灰文字 (正确 - 在白色背景上可见)</div>
+    </div>
+  </div>
+</body>
+</html>
