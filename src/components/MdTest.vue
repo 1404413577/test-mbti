@@ -387,20 +387,23 @@ const onPasswordVerified = () => {
 
 // 构造按语言优先的题库路径列表
 const buildLocalizedPaths = () => {
-  const basePath = testConfig.value.file // e.g. /md/mbti-questions.md
-  // 文件名
+  const basePath = testConfig.value.file.replace(/^\/+/, '') // e.g. md/mbti-questions.md
   const fileName = basePath.split('/').pop()
   const current = locale.value || 'zh-CN'
   const langOnly = current.split('-')[0]
-  const candidates = []
-  // 绝对优先：完整 locale 目录
-  candidates.push(`/md/${current}/${fileName}`)
-  // 次优先：语言简写目录
-  if (langOnly && langOnly !== current) {
-    candidates.push(`/md/${langOnly}/${fileName}`)
+  const baseUrl = import.meta.env.BASE_URL || '/'
+
+  const normalize = (path) => {
+    const normalized = path.replace(/^\/+/, '')
+    return `${baseUrl}${normalized}`
   }
-  // 回退：默认路径
-  candidates.push(basePath)
+
+  const candidates = []
+  candidates.push(normalize(`/md/${current}/${fileName}`))
+  if (langOnly && langOnly !== current) {
+    candidates.push(normalize(`/md/${langOnly}/${fileName}`))
+  }
+  candidates.push(normalize(`/${basePath}`))
   return candidates
 }
 
