@@ -56,61 +56,61 @@
         <span class="section-en">CORE ASSESSMENTS</span>
       </div>
 
-     <el-row :gutter="24" class="test-grid">
-  <el-col
-    v-for="test in tests"
-    :key="test.id"
-    :xs="24"
-    :sm="12"
-    :lg="6"
-    class="grid-item"
-  >
-    <el-card
-      shadow="hover"
-      class="test-card"
-      :body-style="{ padding: '0px' }"
-      @click="navigateToTest(test.route)"
-    >
-      <div class="card-image-wrapper">
-        <el-image
-          class="test-card-image"
-          :src="publicPath(`images/${test.id.split('-')[0]}-card.png`)"
-          fit="cover"
+      <el-row :gutter="24" class="test-grid">
+        <el-col
+          v-for="test in tests"
+          :key="test.id"
+          :xs="24"
+          :sm="12"
+          :lg="6"
+          class="grid-item"
         >
-          <template #placeholder>
-            <div class="image-slot">加载中...</div>
-          </template>
-          <template #error>
-            <div class="image-slot">暂无图片</div>
-          </template>
-        </el-image>
-        <div v-if="test.featured" class="featured-tag">推荐测评</div>
-      </div>
+          <el-card
+            shadow="hover"
+            class="test-card"
+            :body-style="{ padding: '0px' }"
+            @click="navigateToTest(test.route)"
+          >
+            <div class="card-image-wrapper">
+              <el-image
+                class="test-card-image"
+                :src="publicPath(`images/${test.id.split('-')[0]}-card.png`)"
+                fit="cover"
+              >
+                <template #placeholder>
+                  <div class="image-slot">加载中...</div>
+                </template>
+                <template #error>
+                  <div class="image-slot">暂无图片</div>
+                </template>
+              </el-image>
+              <div v-if="test.featured" class="featured-tag">推荐测评</div>
+            </div>
 
-      <div class="card-body">
-        <h3 class="test-title">{{ test.title }}</h3>
-        <p class="test-description">{{ test.description }}</p>
+            <div class="card-body">
+              <h3 class="test-title">{{ test.title }}</h3>
+              <p class="test-description">{{ test.description }}</p>
 
-        <el-divider border-style="dashed" class="card-divider" />
+              <el-divider border-style="dashed" class="card-divider" />
 
-        <div class="test-meta">
-          <span class="meta-item">
-            <el-icon><Clock /></el-icon>
-            {{ test.duration }}
-          </span>
-          <span class="meta-item">
-            <el-icon><Document /></el-icon>
-            {{ test.questionsLabel }}
-          </span>
-          <span class="meta-item">
-            <el-icon><Aim /></el-icon>
-            {{ test.accuracyLabel }}
-          </span>
-        </div>
-      </div>
-    </el-card>
-  </el-col>
-</el-row>
+              <div class="test-meta">
+                <span class="meta-item">
+                  <el-icon><Clock /></el-icon>
+                  {{ test.duration }}
+                </span>
+                <span class="meta-item">
+                  <el-icon><Document /></el-icon>
+                  {{ test.questionsLabel }}
+                </span>
+                <span class="meta-item">
+                  <el-icon><Aim /></el-icon>
+                  {{ test.accuracyLabel }}
+                </span>
+              </div>
+            </div>
+          </el-card>
+        </el-col>
+      </el-row>
     </div>
   </div>
 </template>
@@ -119,8 +119,8 @@
 import { computed, ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { useI18n } from "vue-i18n";
-const baseUrl = import.meta.env.BASE_URL || '/'
-const publicPath = (path) => `${baseUrl}${path.replace(/^\/+/, '')}`
+const baseUrl = import.meta.env.BASE_URL || "/";
+const publicPath = (path) => `${baseUrl}${path.replace(/^\/+/, "")}`;
 // 引入专业的 Element Plus 图标替代 Emoji
 import { Clock, Document, Aim, Right, Picture } from "@element-plus/icons-vue";
 import ParticleBackground from "@/components/ParticleBackground.vue";
@@ -150,6 +150,16 @@ const testMeta = {
     route: "/md-test/big-five",
     filePath: "/big-five-questions.md",
   },
+  holland: {
+    id: "holland-md",
+    route: "/md-test/holland-riasec",
+    filePath: "/holland-riasec-questions.md",
+  },
+  enneagramQuestions: {
+    id: "enneagram-md",
+    route: "/md-test/enneagram",
+    filePath: "/enneagram-questions.md",
+  },
 };
 
 const defaultTestsData = {
@@ -161,6 +171,16 @@ const defaultTestsData = {
     accuracyLabel: "90% 信度",
   },
   bigFive: {
+    featured: false,
+    duration: "10-15分钟",
+    accuracyLabel: "93% 信度",
+  },
+  holland: {
+    featured: false,
+    duration: "10-15分钟",
+    accuracyLabel: "93% 信度",
+  },
+  enneagramQuestions: {
     featured: false,
     duration: "10-15分钟",
     accuracyLabel: "93% 信度",

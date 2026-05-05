@@ -125,7 +125,9 @@ const getSectionImage = (index) => {
     publicPath('images/mbti-cover.png'),
     publicPath('images/eq-cover.png'),
     publicPath('images/learning-cover.png'),
-    publicPath('images/big-five-cover.png')
+    publicPath('images/big-five-cover.png'),
+    publicPath('images/holland-card.png'),
+    publicPath('images/enneagram-card.png'),
   ];
   return images[index] || images[0];
 };

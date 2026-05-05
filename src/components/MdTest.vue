@@ -5,7 +5,7 @@
       <!-- 导航栏 -->
       <nav class="test-nav">
         <button @click="$router.push('/')" class="nav-back">
-          ← {{ $t('nav.back') }}
+          ← {{ $t("nav.back") }}
         </button>
         <h1 class="nav-title">{{ testTitle }}</h1>
         <div class="nav-progress" v-if="currentStep === 'questions'">
@@ -13,528 +13,567 @@
         </div>
       </nav>
 
-    <!-- 加载状态 -->
-    <div v-if="loading" class="loading-section">
-      <div class="container">
-        <div class="loading-card">
-          <div class="loading-spinner"></div>
-          <p>{{ $t('test.loading') }}</p>
+      <!-- 加载状态 -->
+      <div v-if="loading" class="loading-section">
+        <div class="container">
+          <div class="loading-card">
+            <div class="loading-spinner"></div>
+            <p>{{ $t("test.loading") }}</p>
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- 介绍页面 -->
-    <div v-else-if="currentStep === 'intro'" class="intro-section">
-      <div class="container">
-        <div class="intro-card">
-          <div class="intro-header">
-            <div class="test-icon">{{ testConfig.icon }}</div>
-            <h2>{{ testTitle }}</h2>
-            <p class="test-subtitle">{{ testConfig.subtitle }}</p>
-          </div>
-          
-          <div class="intro-content" v-html="testDescription"></div>
-          
-          <div class="test-info">
-            <div class="info-item">
-              <span class="info-icon">📝</span>
-              <span>{{ $t('test.questionsCount', { count: questions.length }) }}</span>
+      <!-- 介绍页面 -->
+      <div v-else-if="currentStep === 'intro'" class="intro-section">
+        <div class="container">
+          <div class="intro-card">
+            <div class="intro-header">
+              <div class="test-icon">{{ testConfig.icon }}</div>
+              <h2>{{ testTitle }}</h2>
+              <p class="test-subtitle">{{ testConfig.subtitle }}</p>
             </div>
-            <div class="info-item">
-              <span class="info-icon">⏱️</span>
-              <span>{{ $t('test.estimate', { minutes: testConfig.duration }) }}</span>
-            </div>
-            <div class="info-item">
-              <span class="info-icon">🎯</span>
-              <span>{{ $t('test.accuracy', { value: testConfig.accuracy }) }}</span>
-            </div>
-          </div>
-          
-          <button @click="startTest" class="start-btn">
-            {{ $t('test.start') }}
-          </button>
-        </div>
-      </div>
-    </div>
 
-    <!-- 问题页面 -->
-    <div v-else-if="currentStep === 'questions'" class="questions-section">
-      <div class="container">
-        <div class="progress-container">
-          <div class="progress-bar">
-            <div class="progress-fill" :style="{ width: progressPercentage + '%' }"></div>
-          </div>
-          <span class="progress-text">{{ $t('test.progress', { percent: Math.round(progressPercentage) }) }}</span>
-          <span class="auto-save-hint">💾 {{ $t('test.autoSave') }}</span>
-        </div>
+            <div class="intro-content" v-html="testDescription"></div>
 
-        <div class="question-card" v-if="questions[currentQuestion]">
-          <div class="question-number">{{ $t('test.questionNumber', { n: currentQuestion + 1 }) }}</div>
-          <div class="question-context" v-if="questions[currentQuestion].context">
-            <strong>{{ $t('test.context') }}：</strong>{{ questions[currentQuestion].context }}
-          </div>
-          <h3 class="question-text">{{ questions[currentQuestion].question }}</h3>
-          
-          <div class="options-container">
-            <div 
-              v-for="(option, index) in questions[currentQuestion].options"
-              :key="index"
-              @click="selectAnswer(option)"
-              class="option-item"
-              :class="{ selected: selectedAnswer === option }"
-            >
-              <div class="option-content">
-                <span class="option-letter">{{ String.fromCharCode(65 + index) }}.</span>
-                <span class="option-text">{{ option.text }}</span>
+            <div class="test-info">
+              <div class="info-item">
+                <span class="info-icon">📝</span>
+                <span>{{
+                  $t("test.questionsCount", { count: questions.length })
+                }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-icon">⏱️</span>
+                <span>{{
+                  $t("test.estimate", { minutes: testConfig.duration })
+                }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-icon">🎯</span>
+                <span>{{
+                  $t("test.accuracy", { value: testConfig.accuracy })
+                }}</span>
               </div>
             </div>
-          </div>
 
-          <div class="navigation-buttons">
-            <button 
-              @click="previousQuestion" 
-              :disabled="currentQuestion === 0"
-              class="nav-btn prev-btn"
-            >
-              {{ $t('test.prev') }}
-            </button>
-            
-            <button 
-              @click="cancelTest"
-              class="nav-btn cancel-btn"
-            >
-              ✕ {{ $t('test.cancel') }}
-            </button>
-            
-            <button 
-              @click="nextQuestion"
-              :disabled="!canProceed"
-              class="nav-btn next-btn"
-            >
-              {{ currentQuestion === questions.length - 1 ? $t('test.viewResult') : $t('test.next') }}
+            <button @click="startTest" class="start-btn">
+              {{ $t("test.start") }}
             </button>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- 结果页面 -->
-    <div v-else-if="currentStep === 'results'" class="results-section">
-      <div class="container">
-        <!-- 结果已保存提示 -->
-        <div class="saved-notice">
-          <span class="notice-icon">💾</span>
-          <span>{{ $t('result.savedNotice') }}</span>
-        </div>
-        
-        <div class="results-card">
-          <component 
-            :is="getResultComponent()" 
-            :answers="answers" 
-            :questions="questions"
-            :test-type="testType"
-            @retake="retakeTest"
-          />
-          
-          <div class="action-buttons">
-            <button @click="printResults" class="action-btn print">
-              <span class="btn-icon">🖨️</span>
-              {{ $t('test.print') }}
-            </button>
-            <button @click="retakeTest" class="action-btn secondary">
-              <span class="btn-icon">🔄</span>
-              {{ $t('test.retake') }}
-            </button>
-            <button @click="$router.push('/')" class="action-btn primary">
-              <span class="btn-icon">🏠</span>
-              {{ $t('nav.back') }}
-            </button>
+      <!-- 问题页面 -->
+      <div v-else-if="currentStep === 'questions'" class="questions-section">
+        <div class="container">
+          <div class="progress-container">
+            <div class="progress-bar">
+              <div
+                class="progress-fill"
+                :style="{ width: progressPercentage + '%' }"
+              ></div>
+            </div>
+            <span class="progress-text">{{
+              $t("test.progress", { percent: Math.round(progressPercentage) })
+            }}</span>
+            <span class="auto-save-hint">💾 {{ $t("test.autoSave") }}</span>
+          </div>
+
+          <div class="question-card" v-if="questions[currentQuestion]">
+            <div class="question-number">
+              {{ $t("test.questionNumber", { n: currentQuestion + 1 }) }}
+            </div>
+            <div
+              class="question-context"
+              v-if="questions[currentQuestion].context"
+            >
+              <strong>{{ $t("test.context") }}：</strong
+              >{{ questions[currentQuestion].context }}
+            </div>
+            <h3 class="question-text">
+              {{ questions[currentQuestion].question }}
+            </h3>
+
+            <div class="options-container">
+              <div
+                v-for="(option, index) in questions[currentQuestion].options"
+                :key="index"
+                @click="selectAnswer(option)"
+                class="option-item"
+                :class="{ selected: selectedAnswer === option }"
+              >
+                <div class="option-content">
+                  <span class="option-letter"
+                    >{{ String.fromCharCode(65 + index) }}.</span
+                  >
+                  <span class="option-text">{{ option.text }}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="navigation-buttons">
+              <button
+                @click="previousQuestion"
+                :disabled="currentQuestion === 0"
+                class="nav-btn prev-btn"
+              >
+                {{ $t("test.prev") }}
+              </button>
+
+              <button @click="cancelTest" class="nav-btn cancel-btn">
+                ✕ {{ $t("test.cancel") }}
+              </button>
+
+              <button
+                @click="nextQuestion"
+                :disabled="!canProceed"
+                class="nav-btn next-btn"
+              >
+                {{
+                  currentQuestion === questions.length - 1
+                    ? $t("test.viewResult")
+                    : $t("test.next")
+                }}
+              </button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+
+      <!-- 结果页面 -->
+      <div v-else-if="currentStep === 'results'" class="results-section">
+        <div class="container">
+          <!-- 结果已保存提示 -->
+          <div class="saved-notice">
+            <span class="notice-icon">💾</span>
+            <span>{{ $t("result.savedNotice") }}</span>
+          </div>
+
+          <div class="results-card">
+            <component
+              :is="getResultComponent()"
+              :answers="answers"
+              :questions="questions"
+              :test-type="testType"
+              @retake="retakeTest"
+            />
+
+            <div class="action-buttons">
+              <button @click="printResults" class="action-btn print">
+                <span class="btn-icon">🖨️</span>
+                {{ $t("test.print") }}
+              </button>
+              <button @click="retakeTest" class="action-btn secondary">
+                <span class="btn-icon">🔄</span>
+                {{ $t("test.retake") }}
+              </button>
+              <button @click="$router.push('/')" class="action-btn primary">
+                <span class="btn-icon">🏠</span>
+                {{ $t("nav.back") }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </PasswordProtection>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
-import { useRoute } from 'vue-router'
-import { marked } from 'marked'
-import { useI18n } from 'vue-i18n'
-
+import { ref, computed, onMounted, watch } from "vue";
+import { useRoute } from "vue-router";
+import { marked } from "marked";
+import { useI18n } from "vue-i18n";
 
 // 结果组件
-import MBTIResults from './results/MBTIResults.vue'
-import EQResults from './results/EQResults.vue'
-import LearningStyleResults from './results/LearningStyleResults.vue'
-import BigFiveResults from './results/BigFiveResults.vue'
-import ParticleBackground from './ParticleBackground.vue'
-import PasswordProtection from './PasswordProtection.vue'
+import MBTIResults from "./results/MBTIResults.vue";
+import EQResults from "./results/EQResults.vue";
+import LearningStyleResults from "./results/LearningStyleResults.vue";
+import BigFiveResults from "./results/BigFiveResults.vue";
+import ParticleBackground from "./ParticleBackground.vue";
+import PasswordProtection from "./PasswordProtection.vue";
+import HollandResults from "./results/HollandResults.vue";
+import EnneagramResults from './results/EnneagramResults.vue'
 
-const route = useRoute()
-const testType = route.params.type || 'mbti'
-const { t, locale } = useI18n() // 解构出 t 方法
+const route = useRoute();
+const testType = route.params.type || "mbti";
+const { t, locale } = useI18n(); // 解构出 t 方法
 
-const loading = ref(false)  // 初始为 false，避免一开始就显示加载中
-const currentStep = ref('intro') // intro, questions, results
-const currentQuestion = ref(0)
-const answers = ref([])
-const selectedAnswer = ref(null)
-const questions = ref([])
-const testTitle = ref('')
-const testDescription = ref('')
-const passwordVerified = ref(false)
+const loading = ref(false); // 初始为 false，避免一开始就显示加载中
+const currentStep = ref("intro"); // intro, questions, results
+const currentQuestion = ref(0);
+const answers = ref([]);
+const selectedAnswer = ref(null);
+const questions = ref([]);
+const testTitle = ref("");
+const testDescription = ref("");
+const passwordVerified = ref(false);
 
 // 测试配置
 const testConfigs = {
   mbti: {
-    title: 'MBTI 性格测试',
-    subtitle: '基于荣格心理类型理论的经典性格测试',
-    icon: '🧩',
-    duration: '10-15',
-    accuracy: '95%',
-    file: '/md/mbti-questions.md'
+    title: "MBTI 性格测试",
+    subtitle: "基于荣格心理类型理论的经典性格测试",
+    icon: "🧩",
+    duration: "10-15",
+    accuracy: "95%",
+    file: "/md/mbti-questions.md",
   },
   eq: {
-    title: '情商测试',
-    subtitle: '测试你的情绪智力水平',
-    icon: '💝',
-    duration: '8-12',
-    accuracy: '92%',
-    file: '/md/eq-questions.md'
+    title: "情商测试",
+    subtitle: "测试你的情绪智力水平",
+    icon: "💝",
+    duration: "8-12",
+    accuracy: "92%",
+    file: "/md/eq-questions.md",
   },
-  'learning-style': {
-    title: '学习风格测试',
-    subtitle: '发现你最有效的学习方式',
-    icon: '🎓',
-    duration: '8-10',
-    accuracy: '90%',
-    file: '/md/learning-style-questions.md'
-  }
-  ,
-  'big-five': {
-    title: '五大人格测试',
-    subtitle: '开放性、尽责性、外向性、宜人性、情绪稳定性（神经质）全面评估',
-    icon: '🌊',
-    duration: '10-15',
-    accuracy: '93%',
-    file: '/md/big-five-questions.md'
-  }
-}
+  "learning-style": {
+    title: "学习风格测试",
+    subtitle: "发现你最有效的学习方式",
+    icon: "🎓",
+    duration: "8-10",
+    accuracy: "90%",
+    file: "/md/learning-style-questions.md",
+  },
+  "big-five": {
+    title: "五大人格测试",
+    subtitle: "开放性、尽责性、外向性、宜人性、情绪稳定性（神经质）全面评估",
+    icon: "🌊",
+    duration: "10-15",
+    accuracy: "93%",
+    file: "/md/big-five-questions.md",
+  },
+  "holland-riasec": {
+    title: "霍兰德职业兴趣测试",
+    subtitle: "发现你的职业性格与理想工作环境",
+    icon: "🧭",
+    duration: "15-20",
+    accuracy: "92%",
+    file: "/md/holland-riasec-questions.md",
+  },
+  enneagram: {
+    title: "九型人格深度测试",
+    subtitle: "揭示您内在的核心动机、恐惧与欲望",
+    icon: "🧿",
+    duration: "15-20",
+    accuracy: "93%",
+    file: "/enneagram-questions.md", // 确保这里的文件名和 public 里的文件名对应
+  },
+};
 
-const testConfig = computed(() => testConfigs[testType] || testConfigs.mbti)
+const testConfig = computed(() => testConfigs[testType] || testConfigs.mbti);
 
 const progressPercentage = computed(() => {
-  return ((currentQuestion.value + 1) / questions.value.length) * 100
-})
+  return ((currentQuestion.value + 1) / questions.value.length) * 100;
+});
 
 const canProceed = computed(() => {
-  const savedAnswer = answers.value[currentQuestion.value]
-  return Boolean(selectedAnswer.value || savedAnswer)
-})
+  const savedAnswer = answers.value[currentQuestion.value];
+  return Boolean(selectedAnswer.value || savedAnswer);
+});
 
 // 解析Markdown文件（支持中英文标题/标记）
 const parseMarkdown = (content) => {
-  const lines = content.split('\n')
-  const parsedQuestions = []
-  let currentQuestion = null
-  let isInDescription = false
-  let description = ''
+  const lines = content.split("\n");
+  const parsedQuestions = [];
+  let currentQuestion = null;
+  let isInDescription = false;
+  let description = "";
   // 支持的标题关键字（中英文）
   const descStartHeadings = new Set([
-    '## 测试说明',
-    '## Test Description',
-    '## About the Test',
-    '## Test Info'
-  ])
-  const questionsStartHeadings = new Set([
-    '## 测试题目',
-    '## Questions'
-  ])
-  const contextPrefixes = [/^\*\*情境\*\*[：:]/, /^\*\*Context\*\*[：:]:?\s*/i]
-  const questionPrefixes = [/^\*\*题目\*\*[：:]/, /^\*\*Question\*\*[：:]:?\s*/i]
-  
+    "## 测试说明",
+    "## Test Description",
+    "## About the Test",
+    "## Test Info",
+  ]);
+  const questionsStartHeadings = new Set(["## 测试题目", "## Questions"]);
+  const contextPrefixes = [/^\*\*情境\*\*[：:]/, /^\*\*Context\*\*[：:]:?\s*/i];
+  const questionPrefixes = [
+    /^\*\*题目\*\*[：:]/,
+    /^\*\*Question\*\*[：:]:?\s*/i,
+  ];
+
   for (let i = 0; i < lines.length; i++) {
-    const line = lines[i].trim()
-    
+    const line = lines[i].trim();
+
     // 获取测试标题
-    if (line.startsWith('# ') && !testTitle.value) {
-      testTitle.value = line.substring(2)
-      continue
+    if (line.startsWith("# ") && !testTitle.value) {
+      testTitle.value = line.substring(2);
+      continue;
     }
-    
+
     // 收集描述内容
     if (descStartHeadings.has(line)) {
-      isInDescription = true
-      continue
+      isInDescription = true;
+      continue;
     }
-    
+
     if (isInDescription && questionsStartHeadings.has(line)) {
-      isInDescription = false
-      testDescription.value = marked(description)
-      continue
+      isInDescription = false;
+      testDescription.value = marked(description);
+      continue;
     }
-    
+
     if (isInDescription && line) {
-      description += line + '\n'
-      continue
+      description += line + "\n";
+      continue;
     }
-    
+
     // 遇到新的章节时（例如计分说明、结果解读）停止解析题目
     if (
-      line.startsWith('## ') &&
+      line.startsWith("## ") &&
       !questionsStartHeadings.has(line) &&
       (currentQuestion || parsedQuestions.length > 0)
     ) {
       if (currentQuestion) {
-        parsedQuestions.push(currentQuestion)
-        currentQuestion = null
+        parsedQuestions.push(currentQuestion);
+        currentQuestion = null;
       }
-      break
+      break;
     }
 
     // 解析题目
-    if (line.startsWith('### ')) {
+    if (line.startsWith("### ")) {
       if (currentQuestion) {
-        parsedQuestions.push(currentQuestion)
+        parsedQuestions.push(currentQuestion);
       }
-      
-      const titleMatch = line.match(/### \d+\. (.+)/)
+
+      const titleMatch = line.match(/### \d+\. (.+)/);
       currentQuestion = {
         title: titleMatch ? titleMatch[1] : line.substring(4),
-        context: '',
-        question: '',
-        options: []
-      }
-      continue
+        context: "",
+        question: "",
+        options: [],
+      };
+      continue;
     }
-    
+
     // 解析情境
     if (contextPrefixes.some((re) => re.test(line))) {
       currentQuestion.context = line
-        .replace(/\*\*情境\*\*[：:]\s*/, '')
-        .replace(/\*\*Context\*\*[：:]:?\s*/i, '')
-      continue
+        .replace(/\*\*情境\*\*[：:]\s*/, "")
+        .replace(/\*\*Context\*\*[：:]:?\s*/i, "");
+      continue;
     }
-    
+
     // 解析题目文本
     if (questionPrefixes.some((re) => re.test(line))) {
       currentQuestion.question = line
-        .replace(/\*\*题目\*\*[：:]\s*/, '')
-        .replace(/\*\*Question\*\*[：:]:?\s*/i, '')
-      continue
+        .replace(/\*\*题目\*\*[：:]\s*/, "")
+        .replace(/\*\*Question\*\*[：:]:?\s*/i, "");
+      continue;
     }
-    
+
     // 解析选项
     if (line.match(/^- [A-D]\./)) {
       // 支持两种计分标记：*[X+1]* 或 [X+1]
-      const optionMatch = line.match(/^- ([A-D])\. (.+?) (?:\*\[([^\]]+)\]\*|\[([^\]]+)\])\s*$/)
+      const optionMatch = line.match(
+        /^- ([A-D])\. (.+?) (?:\*\[([^\]]+)\]\*|\[([^\]]+)\])\s*$/,
+      );
       if (optionMatch) {
-        const letter = optionMatch[1]
-        const text = optionMatch[2]
-        const scoringRaw = optionMatch[3] || optionMatch[4]
+        const letter = optionMatch[1];
+        const text = optionMatch[2];
+        const scoringRaw = optionMatch[3] || optionMatch[4];
         currentQuestion.options.push({
           letter,
           text,
-          scoring: parseScoringString(scoringRaw)
-        })
+          scoring: parseScoringString(scoringRaw),
+        });
       }
-      continue
+      continue;
     }
   }
-  
+
   // 添加最后一个题目
   if (currentQuestion) {
-    parsedQuestions.push(currentQuestion)
+    parsedQuestions.push(currentQuestion);
   }
-  
-  return parsedQuestions
-}
+
+  return parsedQuestions;
+};
 
 // 解析计分字符串
 const parseScoringString = (scoringStr) => {
-  const scores = {}
-  const parts = scoringStr.split(/[,，]/)
-  
-  parts.forEach(part => {
-    const trimmed = part.trim()
+  const scores = {};
+  const parts = scoringStr.split(/[,，]/);
+
+  parts.forEach((part) => {
+    const trimmed = part.trim();
     // 处理MBTI计分格式 (E+2, I+3等)
-    const mbtiMatch = trimmed.match(/([EISNTFJP])\+(\d+)/)
+    const mbtiMatch = trimmed.match(/([EISNTFJP])\+(\d+)/);
     if (mbtiMatch) {
-      const [, dimension, score] = mbtiMatch
-      scores[dimension] = parseInt(score)
-      return
+      const [, dimension, score] = mbtiMatch;
+      scores[dimension] = parseInt(score);
+      return;
     }
-    
+
     // 处理情商计分格式 (自我认知+2等)
-    const eqMatch = trimmed.match(/(.+?)\+(\d+)/)
+    const eqMatch = trimmed.match(/(.+?)\+(\d+)/);
     if (eqMatch) {
-      const [, dimension, score] = eqMatch
-      scores[dimension] = parseInt(score)
+      const [, dimension, score] = eqMatch;
+      scores[dimension] = parseInt(score);
     }
-  })
-  
-  return scores
-}
+  });
+
+  return scores;
+};
 
 // 密码验证成功后的回调
 const onPasswordVerified = () => {
   // 密码验证通过，初始化测试
-  passwordVerified.value = true
-  initializeTest()
-}
+  passwordVerified.value = true;
+  initializeTest();
+};
 
 // 构造按语言优先的题库路径列表
 const buildLocalizedPaths = () => {
-  const basePath = testConfig.value.file.replace(/^\/+/, '') // e.g. md/mbti-questions.md
-  const fileName = basePath.split('/').pop()
-  const current = locale.value || 'zh-CN'
-  const langOnly = current.split('-')[0]
-  const baseUrl = import.meta.env.BASE_URL || '/'
+  const basePath = testConfig.value.file.replace(/^\/+/, ""); // e.g. md/mbti-questions.md
+  const fileName = basePath.split("/").pop();
+  const current = locale.value || "zh-CN";
+  const langOnly = current.split("-")[0];
+  const baseUrl = import.meta.env.BASE_URL || "/";
 
   const normalize = (path) => {
-    const normalized = path.replace(/^\/+/, '')
-    return `${baseUrl}${normalized}`
-  }
+    const normalized = path.replace(/^\/+/, "");
+    return `${baseUrl}${normalized}`;
+  };
 
-  const candidates = []
-  candidates.push(normalize(`/md/${current}/${fileName}`))
+  const candidates = [];
+  candidates.push(normalize(`/md/${current}/${fileName}`));
   if (langOnly && langOnly !== current) {
-    candidates.push(normalize(`/md/${langOnly}/${fileName}`))
+    candidates.push(normalize(`/md/${langOnly}/${fileName}`));
   }
-  candidates.push(normalize(`/${basePath}`))
-  return candidates
-}
+  candidates.push(normalize(`/${basePath}`));
+  return candidates;
+};
 
 // 顺序尝试加载文件（有回退）
 const fetchWithFallback = async (paths) => {
-  let lastErr = null
+  let lastErr = null;
   for (const p of paths) {
     try {
-      const res = await fetch(p)
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
-      const txt = await res.text()
-      return { content: txt, path: p }
+      const res = await fetch(p);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const txt = await res.text();
+      return { content: txt, path: p };
     } catch (e) {
-      lastErr = e
+      lastErr = e;
       // 继续尝试下一个候选
     }
   }
-  throw lastErr || new Error('All fetch attempts failed')
-}
+  throw lastErr || new Error("All fetch attempts failed");
+};
 
 // 加载测试文件（按语言回退）
 const loadTest = async () => {
   try {
-    loading.value = true
-    testTitle.value = ''
-    testDescription.value = ''
-    const candidates = buildLocalizedPaths()
-    let fetched = await fetchWithFallback(candidates)
-    questions.value = parseMarkdown(fetched.content)
-    
+    loading.value = true;
+    testTitle.value = "";
+    testDescription.value = "";
+    const candidates = buildLocalizedPaths();
+    let fetched = await fetchWithFallback(candidates);
+    questions.value = parseMarkdown(fetched.content);
+
     // 如果解析到的问题数为 0，尝试回退到下一个候选文件
     if (!questions.value || questions.value.length === 0) {
-      const currentIndex = candidates.indexOf(fetched.path)
+      const currentIndex = candidates.indexOf(fetched.path);
       for (let i = currentIndex + 1; i < candidates.length; i++) {
         try {
-          const alt = await fetchWithFallback([candidates[i]])
-          const altParsed = parseMarkdown(alt.content)
+          const alt = await fetchWithFallback([candidates[i]]);
+          const altParsed = parseMarkdown(alt.content);
           if (altParsed && altParsed.length > 0) {
-            fetched = alt
-            questions.value = altParsed
-            break
+            fetched = alt;
+            questions.value = altParsed;
+            break;
           }
         } catch (_) {
           // 忽略并继续回退
         }
       }
     }
-    
+
     // 如果没有从文件中获取到标题，使用配置的标题
     if (!testTitle.value) {
-      testTitle.value = testConfig.value.title
+      testTitle.value = testConfig.value.title;
     }
-    
   } catch (error) {
-    console.error('加载测试文件失败:', error)
+    console.error("加载测试文件失败:", error);
     // 使用默认配置
-    testTitle.value = testConfig.value.title
-    testDescription.value = '无法加载测试描述'
-    questions.value = []
+    testTitle.value = testConfig.value.title;
+    testDescription.value = "无法加载测试描述";
+    questions.value = [];
   } finally {
-    loading.value = false
+    loading.value = false;
   }
-}
+};
 
 const startTest = () => {
   if (questions.value.length === 0) {
-    alert('测试题目加载失败，请刷新页面重试')
-    return
+    alert("测试题目加载失败，请刷新页面重试");
+    return;
   }
-  currentStep.value = 'questions'
-}
+  currentStep.value = "questions";
+};
 
 const selectAnswer = (option) => {
-  selectedAnswer.value = option
+  selectedAnswer.value = option;
   // 自动保存进度（选择答案后）
-  answers.value[currentQuestion.value] = option
-  saveProgressToStorage()
-}
+  answers.value[currentQuestion.value] = option;
+  saveProgressToStorage();
+};
 
 const nextQuestion = () => {
-  const answer = selectedAnswer.value || answers.value[currentQuestion.value]
-  if (!answer) return
+  const answer = selectedAnswer.value || answers.value[currentQuestion.value];
+  if (!answer) return;
 
-  answers.value[currentQuestion.value] = answer
+  answers.value[currentQuestion.value] = answer;
 
   if (currentQuestion.value < questions.value.length - 1) {
-    currentQuestion.value++
-    selectedAnswer.value = answers.value[currentQuestion.value] || null
+    currentQuestion.value++;
+    selectedAnswer.value = answers.value[currentQuestion.value] || null;
     // 自动保存进度（切换题目后）
-    saveProgressToStorage()
+    saveProgressToStorage();
   } else {
-    selectedAnswer.value = null
-    showResults()
+    selectedAnswer.value = null;
+    showResults();
   }
-}
+};
 
 const previousQuestion = () => {
   if (currentQuestion.value > 0) {
-    currentQuestion.value--
-    selectedAnswer.value = answers.value[currentQuestion.value] || null
+    currentQuestion.value--;
+    selectedAnswer.value = answers.value[currentQuestion.value] || null;
     // 自动保存进度（返回上一题后）
-    saveProgressToStorage()
+    saveProgressToStorage();
   }
-}
+};
 
 const showResults = () => {
-  currentStep.value = 'results'
+  currentStep.value = "results";
   // 保存结果到 localStorage
-  saveResultsToStorage()
-}
+  saveResultsToStorage();
+};
 
 const retakeTest = () => {
-  currentStep.value = 'intro'
-  currentQuestion.value = 0
-  answers.value = []
-  selectedAnswer.value = null
+  currentStep.value = "intro";
+  currentQuestion.value = 0;
+  answers.value = [];
+  selectedAnswer.value = null;
   // 清除保存的结果
-  clearStoredResults()
-}
+  clearStoredResults();
+};
 
 const cancelTest = () => {
-  const confirmCancel = confirm(t('test.cancelConfirm')) // 使用解构出的 t 方法
+  const confirmCancel = confirm(t("test.cancelConfirm")); // 使用解构出的 t 方法
   if (confirmCancel) {
-    saveProgressToStorage()
-    window.location.href = '/'
+    saveProgressToStorage();
+    window.location.href = "/";
   }
-}
+};
 
 // 保存测试进度（答题过程中）
 const saveProgressToStorage = () => {
-  if (currentStep.value === 'questions' && answers.value.length > 0) {
+  if (currentStep.value === "questions" && answers.value.length > 0) {
     const progressData = {
       testType: testType,
       currentQuestion: currentQuestion.value,
@@ -542,11 +581,14 @@ const saveProgressToStorage = () => {
       questions: questions.value,
       testTitle: testTitle.value,
       timestamp: new Date().toISOString(),
-      isComplete: false
-    }
-    localStorage.setItem(`test_progress_${testType}`, JSON.stringify(progressData))
+      isComplete: false,
+    };
+    localStorage.setItem(
+      `test_progress_${testType}`,
+      JSON.stringify(progressData),
+    );
   }
-}
+};
 
 // 保存结果到 localStorage（测试完成）
 const saveResultsToStorage = () => {
@@ -556,123 +598,127 @@ const saveResultsToStorage = () => {
     questions: questions.value,
     timestamp: new Date().toISOString(),
     testTitle: testTitle.value,
-    isComplete: true
-  }
-  localStorage.setItem(`test_result_${testType}`, JSON.stringify(resultData))
+    isComplete: true,
+  };
+  localStorage.setItem(`test_result_${testType}`, JSON.stringify(resultData));
   // 清除进度数据
-  localStorage.removeItem(`test_progress_${testType}`)
-}
+  localStorage.removeItem(`test_progress_${testType}`);
+};
 
 // 从 localStorage 恢复进度（答题过程中的进度）
 const loadProgressFromStorage = () => {
-  const stored = localStorage.getItem(`test_progress_${testType}`)
+  const stored = localStorage.getItem(`test_progress_${testType}`);
   if (stored) {
     try {
-      const progressData = JSON.parse(stored)
-      answers.value = progressData.answers
-      questions.value = progressData.questions
-      testTitle.value = progressData.testTitle
-      currentQuestion.value = progressData.currentQuestion
-      selectedAnswer.value = answers.value[currentQuestion.value] || null
-      currentStep.value = 'questions'
-      loading.value = false
-      return true
+      const progressData = JSON.parse(stored);
+      answers.value = progressData.answers;
+      questions.value = progressData.questions;
+      testTitle.value = progressData.testTitle;
+      currentQuestion.value = progressData.currentQuestion;
+      selectedAnswer.value = answers.value[currentQuestion.value] || null;
+      currentStep.value = "questions";
+      loading.value = false;
+      return true;
     } catch (e) {
-      console.error('加载保存的进度失败:', e)
-      loading.value = false
-      return false
+      console.error("加载保存的进度失败:", e);
+      loading.value = false;
+      return false;
     }
   }
-  return false
-}
+  return false;
+};
 
 // 从 localStorage 恢复结果（测试完成的结果）
 const loadResultsFromStorage = () => {
-  const stored = localStorage.getItem(`test_result_${testType}`)
+  const stored = localStorage.getItem(`test_result_${testType}`);
   if (stored) {
     try {
-      const resultData = JSON.parse(stored)
-      answers.value = resultData.answers
-      questions.value = resultData.questions
-      testTitle.value = resultData.testTitle
-      currentStep.value = 'results'
-      loading.value = false  // 重要：恢复结果后关闭加载状态
-      return true
+      const resultData = JSON.parse(stored);
+      answers.value = resultData.answers;
+      questions.value = resultData.questions;
+      testTitle.value = resultData.testTitle;
+      currentStep.value = "results";
+      loading.value = false; // 重要：恢复结果后关闭加载状态
+      return true;
     } catch (e) {
-      console.error('加载保存的结果失败:', e)
-      loading.value = false  // 出错时也要关闭加载状态
-      return false
+      console.error("加载保存的结果失败:", e);
+      loading.value = false; // 出错时也要关闭加载状态
+      return false;
     }
   }
-  return false
-}
+  return false;
+};
 
 // 清除保存的结果和进度
 const clearStoredResults = () => {
-  localStorage.removeItem(`test_result_${testType}`)
-  localStorage.removeItem(`test_progress_${testType}`)
-}
+  localStorage.removeItem(`test_result_${testType}`);
+  localStorage.removeItem(`test_progress_${testType}`);
+};
 
 const resetTestState = () => {
-  currentStep.value = 'intro'
-  currentQuestion.value = 0
-  answers.value = []
-  selectedAnswer.value = null
-  questions.value = []
-  testTitle.value = ''
-  testDescription.value = ''
-}
+  currentStep.value = "intro";
+  currentQuestion.value = 0;
+  answers.value = [];
+  selectedAnswer.value = null;
+  questions.value = [];
+  testTitle.value = "";
+  testDescription.value = "";
+};
 
 // 打印结果
 const printResults = () => {
-  window.print()
-}
+  window.print();
+};
 
 const getResultComponent = () => {
   switch (testType) {
-    case 'mbti':
-      return MBTIResults
-    case 'eq':
-      return EQResults
-    case 'learning-style':
-      return LearningStyleResults
-    case 'big-five':
-      return BigFiveResults
+    case "mbti":
+      return MBTIResults;
+    case "eq":
+      return EQResults;
+    case "learning-style":
+      return LearningStyleResults;
+    case "big-five":
+      return BigFiveResults;
+    case "holland":
+      return HollandResults;
+    case "enneagram":
+      return EnneagramResults;
     default:
-      return MBTIResults
+      return MBTIResults;
   }
-}
+};
 
 // 初始化测试（密码验证后调用）
 const initializeTest = () => {
   // 优先级1: 尝试加载答题进度（未完成的测试）
-  const hasProgress = loadProgressFromStorage()
+  const hasProgress = loadProgressFromStorage();
   if (hasProgress) {
-    return  // 找到进度，直接返回
+    return; // 找到进度，直接返回
   }
-  
+
   // 优先级2: 尝试加载完成的测试结果
-  const hasStoredResults = loadResultsFromStorage()
+  const hasStoredResults = loadResultsFromStorage();
   if (hasStoredResults) {
-    return  // 找到结果，直接返回
+    return; // 找到结果，直接返回
   }
-  
+
   // 优先级3: 没有保存的数据，加载测试
-  loadTest()
-}
+  loadTest();
+};
 
 watch(locale, async (newLocale, oldLocale) => {
-  if (!passwordVerified.value) return
-  if (!newLocale || newLocale === oldLocale) return
-  clearStoredResults()
-  resetTestState()
-  await loadTest()
-})
+  if (!passwordVerified.value) return;
+  if (!newLocale || newLocale === oldLocale) return;
+  clearStoredResults();
+  resetTestState();
+  await loadTest();
+});
 
 onMounted(() => {
   // 什么都不做，等待密码验证通过
   // 密码验证组件会在验证通过后调用 onPasswordVerified
-})
+});
 </script>
 
 <style scoped>
@@ -688,7 +734,7 @@ onMounted(() => {
   justify-content: space-between;
   padding: 1.2rem 2rem;
   background: white;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   position: relative;
   z-index: 10;
 }
@@ -745,7 +791,7 @@ onMounted(() => {
   border-radius: 20px;
   padding: 3rem;
   text-align: center;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 }
 
 .loading-spinner {
@@ -764,8 +810,12 @@ onMounted(() => {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 /* 介绍页面样式 */
@@ -778,7 +828,7 @@ onMounted(() => {
   border-radius: 24px;
   padding: 3rem;
   text-align: center;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
 }
 
 .intro-header {
@@ -888,7 +938,7 @@ onMounted(() => {
   background: white;
   padding: 1rem 1.5rem;
   border-radius: 16px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   position: relative;
 }
 
@@ -942,7 +992,7 @@ onMounted(() => {
   background: white;
   border-radius: 24px;
   padding: 3rem;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
 }
 
 .question-number {
@@ -1117,7 +1167,7 @@ onMounted(() => {
   background: white;
   border-radius: 24px;
   padding: 3rem;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
 }
 
 .action-buttons {
@@ -1184,21 +1234,21 @@ onMounted(() => {
   .particle-background {
     display: none !important;
   }
-  
+
   .results-section {
     padding: 0;
   }
-  
+
   .results-card {
     box-shadow: none;
     border: 1px solid #e0e7ff;
     padding: 1.5rem;
   }
-  
+
   body {
     background: white !important;
   }
-  
+
   .md-test {
     background: white !important;
   }
@@ -1208,11 +1258,13 @@ onMounted(() => {
   .container {
     padding: 1rem;
   }
-  
-  .intro-card, .question-card, .results-card {
+
+  .intro-card,
+  .question-card,
+  .results-card {
     padding: 2rem;
   }
-  
+
   .test-nav {
     padding: 1rem;
     flex-wrap: wrap;
@@ -1222,7 +1274,7 @@ onMounted(() => {
   .nav-title {
     font-size: 1.2rem;
   }
-  
+
   .test-info {
     flex-direction: column;
     align-items: center;
@@ -1235,7 +1287,7 @@ onMounted(() => {
   .nav-btn {
     width: 100%;
   }
-  
+
   .action-buttons {
     flex-direction: column;
   }
