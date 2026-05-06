@@ -56,20 +56,15 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.GITEE_PRIVATE_KEY }}
 
+      # --- 2. 终极稳妥版：使用 HTTPS Token 部署到 Gitee Pages ---
       - name: Deploy to Gitee Pages
         run: |
-          # 核心大招：强制关闭所有 SSH 交互式询问，直接放行！
-          export GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no"
-          
-          # 进入打包好的文件目录
           cd dist
-          
-          # 初始化全新的 git 仓库并提交
           git init
           git config user.name "GitHub Actions Bot"
           git config user.email "actions@github.com"
           git add .
           git commit -m "Auto deploy to Gitee Pages"
           
-          # 强制推送到 Gitee
-          git push --force git@gitee.com:hailang123/test-mbti.git HEAD:gh-pages
+          # 使用 Token 进行 HTTPS 强推，彻底告别 SSH 验证
+          git push --force https://hailang123:${{ secrets.GITEE_TOKEN }}@gitee.com/hailang123/test-mbti.git HEAD:gh-pages
