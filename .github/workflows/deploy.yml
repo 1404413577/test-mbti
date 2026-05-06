@@ -58,8 +58,8 @@ jobs:
 
       - name: Deploy to Gitee Pages
         run: |
-          # 将 Gitee 加入已知主机，防止 SSH 首次连接时卡在确认提示上
-          ssh-keyscan -H gitee.com >> ~/.ssh/known_hosts
+          # 核心大招：强制关闭所有 SSH 交互式询问，直接放行！
+          export GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no"
           
           # 进入打包好的文件目录
           cd dist
