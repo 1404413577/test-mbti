@@ -55,6 +55,6 @@ jobs:
         with:
           deploy_key: ${{ secrets.GITEE_PRIVATE_KEY }}
           # ⚠️ 注意：把下方的 your-username 换成你真实的 Gitee 用户名！
-          external_repository: gitee.com/your-username/test-mbti
+          external_repository: gitee.com/hailang123/test-mbti
           publish_branch: gh-pages # 推送到 Gitee 的 gh-pages 分支
           publish_dir: ./dist
