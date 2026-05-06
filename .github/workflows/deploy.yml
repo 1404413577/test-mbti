@@ -48,13 +48,6 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
-        
-      # --- 2. 部署到 Gitee Pages (终极稳妥版) ---
-      # 使用专业的 ssh-agent 插件来管理秘钥，避免换行符和格式引起的 128 错误
-      - name: Setup SSH for Gitee
-        uses: webfactory/ssh-agent@v0.9.0
-        with:
-          ssh-private-key: ${{ secrets.GITEE_PRIVATE_KEY }}
 
       # --- 2. 终极稳妥版：使用 HTTPS Token 部署到 Gitee Pages ---
       - name: Deploy to Gitee Pages
