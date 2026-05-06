@@ -1,18 +1,16 @@
-name: Deploy to GitHub Pages
+name: Deploy to GitHub Pages and Gitee
 
 on:
   push:
     branches:
-      - main  # 如果你的主分支叫 master，请把这里改成 master
+      - main
   workflow_dispatch:
 
-# 设置 GitHub Token 的权限，允许脚本将文件推送到 Pages
 permissions:
   contents: read
   pages: write
   id-token: write
 
-# 确保同一时间只有一个部署任务运行
 concurrency:
   group: "pages"
   cancel-in-progress: true
@@ -30,7 +28,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20 # 你可以根据你本地使用的 Node 版本修改
+          node-version: 20
 
       - name: Install dependencies
         run: npm install
@@ -38,14 +36,25 @@ jobs:
       - name: Build project
         run: npm run build
 
+      # --- 下面是部署到 GitHub Pages 的原配置 ---
       - name: Setup Pages
         uses: actions/configure-pages@v4
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './dist' # Vite 打包后的输出目录
+          path: './dist'
 
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+        
+      # --- 下面是新增的：将打包产物推送到 Gitee ---
+      - name: Deploy to Gitee Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          deploy_key: ${{ secrets.GITEE_PRIVATE_KEY }}
+          # ⚠️ 注意：把下方的 your-username 换成你真实的 Gitee 用户名！
+          external_repository: gitee.com/your-username/test-mbti
+          publish_branch: gh-pages # 推送到 Gitee 的 gh-pages 分支
+          publish_dir: ./dist
