@@ -36,7 +36,7 @@ jobs:
       - name: Build project
         run: npm run build
 
-      # --- 下面是部署到 GitHub Pages 的原配置 ---
+      # --- 1. 部署到 GitHub Pages ---
       - name: Setup Pages
         uses: actions/configure-pages@v4
 
@@ -49,12 +49,26 @@ jobs:
         id: deployment
         uses: actions/deploy-pages@v4
         
-      # --- 下面是新增的：将打包产物推送到 Gitee ---
+      # --- 2. 原生 Git 同步推送到 Gitee ---
       - name: Deploy to Gitee Pages
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          deploy_key: ${{ secrets.GITEE_PRIVATE_KEY }}
-          # ⚠️ 注意：把下方的 your-username 换成你真实的 Gitee 用户名！
-          external_repository: gitee.com/hailang123/test-mbti
-          publish_branch: gh-pages # 推送到 Gitee 的 gh-pages 分支
-          publish_dir: ./dist
+        env:
+          GITEE_PRIVATE_KEY: ${{ secrets.GITEE_PRIVATE_KEY }}
+        run: |
+          # 1. 挂载 Gitee 的私钥并添加信任
+          mkdir -p ~/.ssh
+          echo "$GITEE_PRIVATE_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan gitee.com >> ~/.ssh/known_hosts
+          
+          # 2. 进入 Vite 打包好的产物目录
+          cd dist
+          
+          # 3. 将产物初始化为独立的代码库，并强制推送到 Gitee
+          git init
+          git config user.name "GitHub Actions Bot"
+          git config user.email "actions@github.com"
+          git add .
+          git commit -m "Auto deploy to Gitee Pages"
+          
+          # 4. 强制推送到 Gitee 的 gh-pages 分支
+          git push --force git@gitee.com:hailang123/test-mbti.git HEAD:gh-pages
