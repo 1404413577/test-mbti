@@ -3,7 +3,7 @@
     <div class="report-header">
       <div class="pro-tag">CONFIDENTIAL ASSESSMENT REPORT</div>
       <h1 class="report-title">霍兰德职业兴趣 (RIASEC) 深度诊断报告</h1>
-      <p class="report-meta">评估日期：{{ currentDate }} | 样本编号：ASSESS-{{ Math.random().toString(36).substr(2, 9).toUpperCase() }}</p>
+      <p class="report-meta">评估日期：{{ currentDate }} | 样本编号：{{ sampleId }}</p>
     </div>
 
     <el-row :gutter="20" class="chart-dashboard">
@@ -132,6 +132,7 @@ const props = defineProps({
   }
 })
 
+const sampleId = `ASSESS-${Math.random().toString(36).slice(2, 11).toUpperCase()}`
 const currentDate = new Date().toLocaleDateString()
 
 // --- RIASEC 数据库 ---

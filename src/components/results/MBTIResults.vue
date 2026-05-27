@@ -117,8 +117,8 @@
 import { computed } from 'vue'
 
 const props = defineProps({
-  answers: Array,
-  questions: Array,
+  answers: { type: Array, default: () => [] },
+  questions: { type: Array, default: () => [] },
   testType: String
 })
 

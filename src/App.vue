@@ -1,6 +1,3 @@
-<script setup>
-</script>
-
 <template>
   <div id="app">
     <header class="lang-bar">
@@ -15,14 +12,7 @@
 </template>
 
 <style>
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
 #app {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
   min-height: 100vh;
   background: #f5f7fa;
 }

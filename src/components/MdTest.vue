@@ -181,7 +181,7 @@
 
 <script setup>
 import { ref, computed, onMounted, watch } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { marked } from "marked";
 import { useI18n } from "vue-i18n";
 
@@ -196,6 +196,7 @@ import HollandResults from "./results/HollandResults.vue";
 import EnneagramResults from './results/EnneagramResults.vue'
 
 const route = useRoute();
+const router = useRouter();
 const testType = route.params.type || "mbti";
 const { t, locale } = useI18n(); // 解构出 t 方法
 
@@ -257,13 +258,14 @@ const testConfigs = {
     icon: "🧿",
     duration: "15-20",
     accuracy: "93%",
-    file: "/enneagram-questions.md", // 确保这里的文件名和 public 里的文件名对应
+    file: "/md/enneagram-questions.md",
   },
 };
 
 const testConfig = computed(() => testConfigs[testType] || testConfigs.mbti);
 
 const progressPercentage = computed(() => {
+  if (!questions.value.length) return 0;
   return ((currentQuestion.value + 1) / questions.value.length) * 100;
 });
 
@@ -564,12 +566,20 @@ const retakeTest = () => {
 };
 
 const cancelTest = () => {
-  const confirmCancel = confirm(t("test.cancelConfirm")); // 使用解构出的 t 方法
+  const confirmCancel = confirm(t("test.cancelConfirm"));
   if (confirmCancel) {
     saveProgressToStorage();
-    window.location.href = "/";
+    router.push("/");
   }
 };
+
+// 移除题目中的计分权重信息，仅保留展示所需字段
+const stripScoring = (qList) => qList.map(q => ({
+  title: q.title,
+  context: q.context,
+  question: q.question,
+  options: q.options.map(o => ({ letter: o.letter, text: o.text }))
+}))
 
 // 保存测试进度（答题过程中）
 const saveProgressToStorage = () => {
@@ -578,7 +588,7 @@ const saveProgressToStorage = () => {
       testType: testType,
       currentQuestion: currentQuestion.value,
       answers: answers.value,
-      questions: questions.value,
+      questions: stripScoring(questions.value),
       testTitle: testTitle.value,
       timestamp: new Date().toISOString(),
       isComplete: false,
@@ -595,7 +605,7 @@ const saveResultsToStorage = () => {
   const resultData = {
     testType: testType,
     answers: answers.value,
-    questions: questions.value,
+    questions: stripScoring(questions.value),
     timestamp: new Date().toISOString(),
     testTitle: testTitle.value,
     isComplete: true,
@@ -680,7 +690,7 @@ const getResultComponent = () => {
       return LearningStyleResults;
     case "big-five":
       return BigFiveResults;
-    case "holland":
+    case "holland-riasec":
       return HollandResults;
     case "enneagram":
       return EnneagramResults;
@@ -712,7 +722,11 @@ watch(locale, async (newLocale, oldLocale) => {
   if (!newLocale || newLocale === oldLocale) return;
   clearStoredResults();
   resetTestState();
-  await loadTest();
+  try {
+    await loadTest();
+  } catch (e) {
+    console.error("切换语言后加载测试失败:", e);
+  }
 });
 
 onMounted(() => {

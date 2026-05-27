@@ -124,8 +124,8 @@ import { Radar } from 'vue-chartjs'
 ChartJS.register(RadialLinearScale, PointElement, LineElement, Filler, Tooltip, Legend)
 
 const props = defineProps({
-  answers: Array,
-  questions: Array,
+  answers: { type: Array, default: () => [] },
+  questions: { type: Array, default: () => [] },
   testType: String
 })
 

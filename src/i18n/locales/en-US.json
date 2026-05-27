@@ -61,6 +61,24 @@
         "accuracyLabel": "93% accuracy",
         "tags": ["Traits", "OCEAN", "Psychology"],
         "featured": false
+      },
+      "holland": {
+        "title": "Holland RIASEC Career Test",
+        "description": "Discover your core career interests based on the RIASEC model. Assess across 6 dimensions to match your ideal work environment and long-term career path.",
+        "duration": "10-15 mins",
+        "questionsLabel": "30 questions",
+        "accuracyLabel": "92% accuracy",
+        "tags": ["Career Planning", "RIASEC", "Personal Growth"],
+        "featured": false
+      },
+      "enneagramQuestions": {
+        "title": "Enneagram Deep Test",
+        "description": "Reveal your inner core motivations, fears, and desires. Identify your dominant type among 9 personality types and explore growth and stress patterns.",
+        "duration": "10-15 mins",
+        "questionsLabel": "27 questions",
+        "accuracyLabel": "93% accuracy",
+        "tags": ["Personality Analysis", "Deep Motivation", "Psychology"],
+        "featured": false
       }
     },
     "infoCards": [
@@ -124,6 +142,24 @@
           "Gauge openness, conscientiousness, extraversion, agreeableness, and emotional stability",
           "Spot workstyle risks and resilience boosters",
           "Align strengths to roles, careers, and wellbeing goals"
+        ]
+      },
+      {
+        "title": "Holland RIASEC Career Test",
+        "description": "Use the RIASEC model to map your career interests and find the best-fitting professional environments.",
+        "highlights": [
+          "Assess across all six RIASEC dimensions",
+          "Identify top career interest clusters",
+          "Get workplace environment recommendations"
+        ]
+      },
+      {
+        "title": "Enneagram Deep Test",
+        "description": "Explore the nine-type personality framework rooted in core motivations, fears, and desires.",
+        "highlights": [
+          "Reveal your dominant Enneagram type",
+          "Understand growth and stress dynamics",
+          "Gain deep insight into inner drives"
         ]
       }
     ],

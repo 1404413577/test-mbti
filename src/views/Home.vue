@@ -44,8 +44,6 @@
               fit="cover"
               class="hero-image parallax-image"
               loading="lazy"
-              :preview-src-list="galleryImages"
-              :initial-index="index"
             />
           </div>
         </el-col>
@@ -74,7 +72,7 @@
             <div class="card-image-wrapper">
               <el-image
                 class="test-card-image"
-                :src="publicPath(`images/${test.id.split('-')[0]}-card.png`)"
+                :src="publicPath(`images/${test.imageKey || test.id.split('-')[0]}-card.png`)"
                 fit="cover"
               >
                 <template #placeholder>
@@ -122,7 +120,7 @@ import { useI18n } from "vue-i18n";
 const baseUrl = import.meta.env.BASE_URL || "/";
 const publicPath = (path) => `${baseUrl}${path.replace(/^\/+/, "")}`;
 // 引入专业的 Element Plus 图标替代 Emoji
-import { Clock, Document, Aim, Right, Picture } from "@element-plus/icons-vue";
+import { Clock, Document, Aim, Right } from "@element-plus/icons-vue";
 import ParticleBackground from "@/components/ParticleBackground.vue";
 
 const router = useRouter();
@@ -138,27 +136,37 @@ const testMeta = {
     id: "mbti-md",
     route: "/md-test/mbti",
     filePath: "/mbti-questions.md",
+    imageKey: "mbti",
   },
-  eq: { id: "eq-md", route: "/md-test/eq", filePath: "/eq-questions.md" },
+  eq: {
+    id: "eq-md",
+    route: "/md-test/eq",
+    filePath: "/eq-questions.md",
+    imageKey: "eq",
+  },
   learningStyle: {
     id: "learning-style-md",
     route: "/md-test/learning-style",
     filePath: "/learning-style-questions.md",
+    imageKey: "learning",
   },
   bigFive: {
     id: "big-five-md",
     route: "/md-test/big-five",
     filePath: "/big-five-questions.md",
+    imageKey: "big-five",
   },
   holland: {
     id: "holland-md",
     route: "/md-test/holland-riasec",
     filePath: "/holland-riasec-questions.md",
+    imageKey: "holland",
   },
   enneagramQuestions: {
     id: "enneagram-md",
     route: "/md-test/enneagram",
     filePath: "/enneagram-questions.md",
+    imageKey: "enneagram",
   },
 };
 

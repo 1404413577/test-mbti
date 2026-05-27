@@ -90,7 +90,6 @@ const checkPasswordVerification = () => {
   const verified = sessionStorage.getItem(`password_verified_${props.moduleKey}`)
   if (verified === 'true') {
     isVerified.value = true
-    emit('verified')
     return true
   }
   return false

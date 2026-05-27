@@ -3,7 +3,7 @@
     <div class="report-header">
       <div class="pro-tag">DEEP PSYCHOLOGICAL PROFILE</div>
       <h1 class="report-title">九型人格 (Enneagram) 深度诊断报告</h1>
-      <p class="report-meta">评估日期：{{ currentDate }} | 样本编号：EN-{{ Math.random().toString(36).substr(2, 9).toUpperCase() }}</p>
+      <p class="report-meta">评估日期：{{ currentDate }} | 样本编号：{{ sampleId }}</p>
     </div>
 
     <el-row :gutter="20" class="chart-dashboard">
@@ -120,6 +120,7 @@ const props = defineProps({
   questions: { type: Array, default: () => [] }
 })
 
+const sampleId = `EN-${Math.random().toString(36).slice(2, 11).toUpperCase()}`
 const currentDate = new Date().toLocaleDateString()
 
 // 九型人格核心数据库 (极高商业价值文案)
@@ -297,7 +298,7 @@ const barData = computed(() => ({
   }]
 }))
 
-const radarOptions = computed(() => ({
+const radarOptions = {
   responsive: true,
   maintainAspectRatio: false,
   scales: {
@@ -309,7 +310,7 @@ const radarOptions = computed(() => ({
     }
   },
   plugins: { legend: { display: false } }
-}))
+}
 
 const barOptions = {
   responsive: true,

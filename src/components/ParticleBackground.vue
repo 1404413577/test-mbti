@@ -77,6 +77,7 @@ const animate = () => {
   animationId = requestAnimationFrame(animate)
 }
 
+let resizeTimer = null
 const resizeCanvas = () => {
   if (canvas.value) {
     canvas.value.width = window.innerWidth
@@ -85,20 +86,39 @@ const resizeCanvas = () => {
   }
 }
 
+const debouncedResize = () => {
+  clearTimeout(resizeTimer)
+  resizeTimer = setTimeout(resizeCanvas, 200)
+}
+
 onMounted(() => {
   if (canvas.value) {
     ctx = canvas.value.getContext('2d')
     resizeCanvas()
     animate()
-    window.addEventListener('resize', resizeCanvas)
+    window.addEventListener('resize', debouncedResize)
+    document.addEventListener('visibilitychange', handleVisibility)
   }
 })
+
+const handleVisibility = () => {
+  if (document.hidden) {
+    if (animationId) {
+      cancelAnimationFrame(animationId)
+      animationId = null
+    }
+  } else {
+    if (!animationId) animate()
+  }
+}
 
 onUnmounted(() => {
   if (animationId) {
     cancelAnimationFrame(animationId)
   }
-  window.removeEventListener('resize', resizeCanvas)
+  clearTimeout(resizeTimer)
+  window.removeEventListener('resize', debouncedResize)
+  document.removeEventListener('visibilitychange', handleVisibility)
 })
 </script>
 

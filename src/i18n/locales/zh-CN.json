@@ -72,12 +72,12 @@
         "featured": false
       },
       "enneagramQuestions": {
-        "title": "基于荣格心理类型理论的经典性格测试",
-        "description": "基于荣格心理类型理论，识别你的16种性格类型之一，了解你的认知 preference 和行为模式。包含45道精心设计的题目，全面评估四个维度。",
+        "title": "九型人格深度测试",
+        "description": "揭示您内在的核心动机、恐惧与欲望，识别九种人格类型中的主导类型，了解您的成长方向与压力反应模式。包含27道精心设计的题目，深度探索内在驱动力。",
         "duration": "10-15分钟",
         "questionsLabel": "27题",
         "accuracyLabel": "93%准确",
-        "tags": ["人格特质", "OCEAN", "心理学"],
+        "tags": ["人格分析", "深层动机", "心理学"],
         "featured": false
       }
     },
