@@ -1,6 +1,9 @@
 <template>
   <div id="app">
     <header class="lang-bar">
+      <button class="music-toggle" @click="toggleMusic" :title="isMusicOn ? '暂停音乐' : '播放音乐'">
+        {{ isMusicOn ? '🔊' : '🔇' }}
+      </button>
       <button class="theme-toggle" @click="toggleTheme" :title="isDark ? 'Switch to light' : 'Switch to dark'">
         {{ isDark ? '☀️' : '🌙' }}
       </button>
@@ -39,16 +42,37 @@
   background: var(--color-input-bg);
   color: var(--color-text);
 }
+
+.music-toggle {
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1.2rem;
+  padding: 4px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  color: var(--color-text);
+}
+
+.music-toggle:hover {
+  background: var(--color-surface-hover);
+}
 </style>
 
 <script setup>
 import { ref, watch, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { setLocale } from '@/i18n'
+import { useBackgroundMusic } from '@/composables/useBackgroundMusic'
 
 const { locale: i18nLocale } = useI18n()
 const locale = ref(i18nLocale.value)
 const isDark = ref(false)
+
+const { isPlaying: isMusicOn, toggle: toggleMusic, restore: restoreMusic } = useBackgroundMusic()
 
 const onChange = () => {
   setLocale(locale.value)
@@ -74,5 +98,6 @@ onMounted(() => {
     isDark.value = true
   }
   applyTheme()
+  restoreMusic()
 })
 </script>
