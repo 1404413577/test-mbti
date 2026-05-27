@@ -194,6 +194,8 @@ import ParticleBackground from "./ParticleBackground.vue";
 import PasswordProtection from "./PasswordProtection.vue";
 import HollandResults from "./results/HollandResults.vue";
 import EnneagramResults from './results/EnneagramResults.vue'
+import DiscResults from './results/DiscResults.vue'
+import ResilienceResults from './results/ResilienceResults.vue'
 
 const route = useRoute();
 const router = useRouter();
@@ -259,6 +261,22 @@ const testConfigs = {
     duration: "15-20",
     accuracy: "93%",
     file: "/md/enneagram-questions.md",
+  },
+  disc: {
+    title: "DISC 行为风格测试",
+    subtitle: "精准刻画您的职场沟通模式与行为风格",
+    icon: "🎯",
+    duration: "10-15",
+    accuracy: "94%",
+    file: "/md/disc-questions.md",
+  },
+  resilience: {
+    title: "心理韧性评估",
+    subtitle: "衡量您在逆境中的恢复力与抗压能力",
+    icon: "🛡️",
+    duration: "8-12",
+    accuracy: "91%",
+    file: "/md/resilience-questions.md",
   },
 };
 
@@ -694,6 +712,10 @@ const getResultComponent = () => {
       return HollandResults;
     case "enneagram":
       return EnneagramResults;
+    case "disc":
+      return DiscResults;
+    case "resilience":
+      return ResilienceResults;
     default:
       return MBTIResults;
   }

@@ -79,6 +79,24 @@
         "accuracyLabel": "93%准确",
         "tags": ["人格分析", "深层动机", "心理学"],
         "featured": false
+      },
+      "disc": {
+        "title": "DISC 行为风格测试",
+        "description": "基于 Marston 行为模型，从支配、影响、稳健、谨慎四个维度精准刻画您在职场中的沟通模式、决策偏好与团队角色。包含30道情境选择题，助力提升人际效能。",
+        "duration": "10-15分钟",
+        "questionsLabel": "30题",
+        "accuracyLabel": "94%准确",
+        "tags": ["行为风格", "职场沟通", "团队协作"],
+        "featured": false
+      },
+      "resilience": {
+        "title": "心理韧性评估",
+        "description": "衡量您在逆境中的恢复力与抗压能力，从情绪调节、乐观主义、自我效能、社会支持等维度全面扫描心理资本。包含25道题目，为高压人群提供科学反馈。",
+        "duration": "8-12分钟",
+        "questionsLabel": "25题",
+        "accuracyLabel": "91%准确",
+        "tags": ["心理韧性", "抗压能力", "情绪管理"],
+        "featured": false
       }
     },
     "infoCards": [

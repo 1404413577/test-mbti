@@ -79,6 +79,24 @@
         "accuracyLabel": "93% accuracy",
         "tags": ["Personality Analysis", "Deep Motivation", "Psychology"],
         "featured": false
+      },
+      "disc": {
+        "title": "DISC Behavioral Style",
+        "description": "Based on Marston's behavioral model, map your workplace communication style, decision-making preferences, and team role across dominance, influence, steadiness, and conscientiousness. Includes 30 scenario-based items.",
+        "duration": "10-15 mins",
+        "questionsLabel": "30 questions",
+        "accuracyLabel": "94% accuracy",
+        "tags": ["Behavioral Style", "Workplace", "Teamwork"],
+        "featured": false
+      },
+      "resilience": {
+        "title": "Resilience Assessment",
+        "description": "Measure your ability to bounce back from adversity. Assess emotional regulation, optimism, self-efficacy, and social support to build a complete picture of your psychological capital across 25 items.",
+        "duration": "8-12 mins",
+        "questionsLabel": "25 questions",
+        "accuracyLabel": "91% accuracy",
+        "tags": ["Resilience", "Stress Management", "Mental Health"],
+        "featured": false
       }
     },
     "infoCards": [

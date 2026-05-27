@@ -96,7 +96,9 @@ const checkPasswordVerification = () => {
 }
 
 onMounted(() => {
-  checkPasswordVerification()
+  if (checkPasswordVerification()) {
+    emit('verified')
+  }
 })
 </script>
 

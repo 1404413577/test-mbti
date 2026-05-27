@@ -72,7 +72,7 @@
             <div class="card-image-wrapper">
               <el-image
                 class="test-card-image"
-                :src="publicPath(`images/${test.imageKey || test.id.split('-')[0]}-card.png`)"
+                :src="getCardImage(test)"
                 fit="cover"
               >
                 <template #placeholder>
@@ -168,6 +168,20 @@ const testMeta = {
     filePath: "/enneagram-questions.md",
     imageKey: "enneagram",
   },
+  disc: {
+    id: "disc-md",
+    route: "/md-test/disc",
+    filePath: "/disc-questions.md",
+    imageKey: "disc",
+    imageExt: "svg",
+  },
+  resilience: {
+    id: "resilience-md",
+    route: "/md-test/resilience",
+    filePath: "/resilience-questions.md",
+    imageKey: "resilience",
+    imageExt: "svg",
+  },
 };
 
 const defaultTestsData = {
@@ -192,6 +206,16 @@ const defaultTestsData = {
     featured: false,
     duration: "10-15分钟",
     accuracyLabel: "93% 信度",
+  },
+  disc: {
+    featured: false,
+    duration: "10-15分钟",
+    accuracyLabel: "94% 信度",
+  },
+  resilience: {
+    featured: false,
+    duration: "8-12分钟",
+    accuracyLabel: "91% 信度",
   },
 };
 
@@ -241,6 +265,12 @@ const heroStats = computed(() => {
 });
 
 onMounted(updateQuestionCounts);
+
+const getCardImage = (test) => {
+  const imageKey = test.imageKey || test.id.split('-')[0];
+  const ext = test.imageExt || 'png';
+  return publicPath(`images/${imageKey}-card.${ext}`);
+};
 
 const navigateToTest = (route) => router.push(route);
 const goToIntro = () => router.push("/test-intro");
