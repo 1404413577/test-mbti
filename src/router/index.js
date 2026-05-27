@@ -3,6 +3,7 @@ import Home from '@/views/Home.vue'
 import MdTest from '@/components/MdTest.vue'
 import TestOverview from '@/views/TestOverview.vue'
 import TestIntro from '@/views/TestIntro.vue'
+import HistoryResults from '@/views/HistoryResults.vue'
 
 const routes = [
   {
@@ -25,6 +26,11 @@ const routes = [
     path: '/test-intro',
     name: 'TestIntro',
     component: TestIntro
+  },
+  {
+    path: '/test-history',
+    name: 'HistoryResults',
+    component: HistoryResults
   }
 ]
 

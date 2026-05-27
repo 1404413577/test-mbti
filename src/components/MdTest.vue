@@ -76,6 +76,7 @@
             <span class="progress-text">{{
               $t("test.progress", { percent: Math.round(progressPercentage) })
             }}</span>
+            <span class="timer-display">⏱ {{ formatTime(elapsedSeconds) }}</span>
             <span class="auto-save-hint">💾 {{ $t("test.autoSave") }}</span>
           </div>
 
@@ -107,6 +108,7 @@
                     >{{ String.fromCharCode(65 + index) }}.</span
                   >
                   <span class="option-text">{{ option.text }}</span>
+                  <span class="option-key-hint">{{ index + 1 }}</span>
                 </div>
               </div>
             </div>
@@ -142,8 +144,8 @@
 
       <!-- 结果页面 -->
       <div v-else-if="currentStep === 'results'" class="results-section">
+        <canvas v-if="confettiActive" id="confetti-canvas" class="confetti-canvas"></canvas>
         <div class="container">
-          <!-- 结果已保存提示 -->
           <div class="saved-notice">
             <span class="notice-icon">💾</span>
             <span>{{ $t("result.savedNotice") }}</span>
@@ -163,6 +165,10 @@
                 <span class="btn-icon">🖨️</span>
                 {{ $t("test.print") }}
               </button>
+              <button @click="generateShareCard" class="action-btn share">
+                <span class="btn-icon">📤</span>
+                Share
+              </button>
               <button @click="retakeTest" class="action-btn secondary">
                 <span class="btn-icon">🔄</span>
                 {{ $t("test.retake") }}
@@ -173,6 +179,18 @@
               </button>
             </div>
           </div>
+
+          <!-- Share modal -->
+          <div v-if="showShareModal" class="share-modal-overlay" @click.self="showShareModal = false">
+            <div class="share-modal">
+              <h3>Share Your Result</h3>
+              <img :src="shareImage" alt="Result card" class="share-image" />
+              <div class="share-modal-actions">
+                <a :href="shareImage" download="test-result.png" class="action-btn primary">Download</a>
+                <button @click="showShareModal = false" class="action-btn secondary">Close</button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -180,7 +198,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from "vue";
+import { ref, computed, onMounted, onUnmounted, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { marked } from "marked";
 import { useI18n } from "vue-i18n";
@@ -212,6 +230,17 @@ const questions = ref([]);
 const testTitle = ref("");
 const testDescription = ref("");
 const passwordVerified = ref(false);
+
+// Timer
+const elapsedSeconds = ref(0);
+let timerInterval = null;
+
+// Confetti
+const confettiActive = ref(false);
+
+// Share card
+const shareImage = ref(null);
+const showShareModal = ref(false);
 
 // 测试配置
 const testConfigs = {
@@ -421,6 +450,22 @@ const parseMarkdown = (content) => {
   return parsedQuestions;
 };
 
+// 随机打乱选项顺序
+const shuffleArray = (arr) => {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+};
+
+const shuffleQuestionOptions = (qList) => {
+  for (const q of qList) {
+    q.options = shuffleArray(q.options);
+  }
+};
+
 // 解析计分字符串
 const parseScoringString = (scoringStr) => {
   const scores = {};
@@ -502,6 +547,7 @@ const loadTest = async () => {
     const candidates = buildLocalizedPaths();
     let fetched = await fetchWithFallback(candidates);
     questions.value = parseMarkdown(fetched.content);
+    shuffleQuestionOptions(questions.value);
 
     // 如果解析到的问题数为 0，尝试回退到下一个候选文件
     if (!questions.value || questions.value.length === 0) {
@@ -536,12 +582,34 @@ const loadTest = async () => {
   }
 };
 
+const formatTime = (seconds) => {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+};
+
+const startTimer = () => {
+  elapsedSeconds.value = 0;
+  if (timerInterval) clearInterval(timerInterval);
+  timerInterval = setInterval(() => {
+    elapsedSeconds.value++;
+  }, 1000);
+};
+
+const stopTimer = () => {
+  if (timerInterval) {
+    clearInterval(timerInterval);
+    timerInterval = null;
+  }
+};
+
 const startTest = () => {
   if (questions.value.length === 0) {
     alert("测试题目加载失败，请刷新页面重试");
     return;
   }
   currentStep.value = "questions";
+  startTimer();
 };
 
 const selectAnswer = (option) => {
@@ -578,23 +646,27 @@ const previousQuestion = () => {
 };
 
 const showResults = () => {
+  stopTimer();
   currentStep.value = "results";
-  // 保存结果到 localStorage
   saveResultsToStorage();
+  triggerConfetti();
 };
 
 const retakeTest = () => {
+  stopTimer();
+  elapsedSeconds.value = 0;
+  confettiActive.value = false;
   currentStep.value = "intro";
   currentQuestion.value = 0;
   answers.value = [];
   selectedAnswer.value = null;
-  // 清除保存的结果
   clearStoredResults();
 };
 
 const cancelTest = () => {
   const confirmCancel = confirm(t("test.cancelConfirm"));
   if (confirmCancel) {
+    stopTimer();
     saveProgressToStorage();
     router.push("/");
   }
@@ -635,9 +707,22 @@ const saveResultsToStorage = () => {
     questions: stripScoring(questions.value),
     timestamp: new Date().toISOString(),
     testTitle: testTitle.value,
+    elapsedSeconds: elapsedSeconds.value,
     isComplete: true,
   };
   localStorage.setItem(`test_result_${testType}`, JSON.stringify(resultData));
+
+  // 追加到历史记录数组
+  const historyRaw = localStorage.getItem("test_results_history");
+  let history = [];
+  try {
+    history = historyRaw ? JSON.parse(historyRaw) : [];
+  } catch (e) {
+    history = [];
+  }
+  history.push(resultData);
+  localStorage.setItem("test_results_history", JSON.stringify(history));
+
   // 清除进度数据
   localStorage.removeItem(`test_progress_${testType}`);
 };
@@ -702,6 +787,198 @@ const resetTestState = () => {
   testDescription.value = "";
 };
 
+// 键盘快捷键
+const handleKeydown = (e) => {
+  if (currentStep.value !== "questions") return;
+  if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
+
+  const opts = questions.value[currentQuestion.value]?.options || [];
+  const key = e.key;
+
+  if (key >= "1" && key <= String(Math.min(opts.length, 9))) {
+    e.preventDefault();
+    selectAnswer(opts[parseInt(key) - 1]);
+  } else if (key === "Enter") {
+    e.preventDefault();
+    if (canProceed.value) nextQuestion();
+  } else if (key === "Backspace") {
+    e.preventDefault();
+    previousQuestion();
+  }
+};
+
+// 撒花动画
+const triggerConfetti = () => {
+  confettiActive.value = true;
+  setTimeout(() => {
+    const canvas = document.getElementById("confetti-canvas");
+    if (!canvas) {
+      confettiActive.value = false;
+      return;
+    }
+
+    const ctx = canvas.getContext("2d");
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    const colors = [
+      "#6366f1", "#10b981", "#f59e0b", "#ef4444",
+      "#3b82f6", "#ec4899", "#8b5cf6", "#14b8a6",
+    ];
+    const particles = [];
+
+    for (let i = 0; i < 150; i++) {
+      particles.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height - canvas.height,
+        w: Math.random() * 10 + 5,
+        h: Math.random() * 6 + 3,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        vx: (Math.random() - 0.5) * 3,
+        vy: Math.random() * 3 + 2,
+        rotation: Math.random() * 360,
+        rv: (Math.random() - 0.5) * 10,
+        opacity: 1,
+      });
+    }
+
+    let frame = 0;
+    const animate = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      for (const p of particles) {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.rotation += p.rv;
+        p.vy += 0.05;
+        p.opacity -= 0.003;
+
+        if (p.opacity <= 0) continue;
+
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate((p.rotation * Math.PI) / 180);
+        ctx.globalAlpha = p.opacity;
+        ctx.fillStyle = p.color;
+        ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+        ctx.restore();
+      }
+
+      frame++;
+      if (frame < 180) {
+        requestAnimationFrame(animate);
+      } else {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        confettiActive.value = false;
+      }
+    };
+
+    requestAnimationFrame(animate);
+  }, 200);
+};
+
+// 计算维度分数
+const computeScores = () => {
+  const scores = {};
+  for (const ans of answers.value) {
+    if (!ans?.scoring) continue;
+    for (const [dim, score] of Object.entries(ans.scoring)) {
+      scores[dim] = (scores[dim] || 0) + score;
+    }
+  }
+  return scores;
+};
+
+// 生成分享卡片图片
+const generateShareCard = () => {
+  const canvas = document.createElement("canvas");
+  canvas.width = 600;
+  canvas.height = 420;
+  const ctx = canvas.getContext("2d");
+
+  // 背景
+  const gradient = ctx.createLinearGradient(0, 0, 600, 420);
+  gradient.addColorStop(0, "#6366f1");
+  gradient.addColorStop(1, "#8b5cf6");
+  ctx.fillStyle = gradient;
+  ctx.roundRect(0, 0, 600, 420, 16);
+  ctx.fill();
+
+  // 装饰圆
+  ctx.fillStyle = "rgba(255,255,255,0.08)";
+  for (let i = 0; i < 5; i++) {
+    ctx.beginPath();
+    ctx.arc(80 + i * 120, 50, 35 + i * 12, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // 测试标题
+  ctx.fillStyle = "white";
+  ctx.font = "bold 26px -apple-system, BlinkMacSystemFont, sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText(testTitle.value, 300, 95);
+
+  // 日期和用时
+  ctx.font = "15px -apple-system, BlinkMacSystemFont, sans-serif";
+  ctx.fillStyle = "rgba(255,255,255,0.75)";
+  const d = new Date();
+  ctx.fillText(
+    `${d.toLocaleDateString()}  ·  ${formatTime(elapsedSeconds.value)}`,
+    300, 130
+  );
+
+  // 分隔线
+  ctx.strokeStyle = "rgba(255,255,255,0.25)";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(80, 155);
+  ctx.lineTo(520, 155);
+  ctx.stroke();
+
+  // 题目数
+  ctx.font = "16px -apple-system, BlinkMacSystemFont, sans-serif";
+  ctx.fillStyle = "rgba(255,255,255,0.85)";
+  ctx.fillText(`${questions.value.length} 题`, 300, 190);
+
+  // 维度分数
+  const dimensionScores = computeScores();
+  const entries = Object.entries(dimensionScores);
+  const maxScore = Math.max(...entries.map(([, v]) => v), 1);
+  let y = 225;
+
+  ctx.font = "14px -apple-system, BlinkMacSystemFont, sans-serif";
+  for (const [dim, score] of entries.slice(0, 6)) {
+    ctx.fillStyle = "rgba(255,255,255,0.9)";
+    ctx.textAlign = "right";
+    ctx.fillText(dim, 145, y + 4);
+
+    const barWidth = (score / maxScore) * 210;
+    ctx.fillStyle = "rgba(255,255,255,0.25)";
+    ctx.beginPath();
+    ctx.roundRect(155, y - 7, 210, 16, 4);
+    ctx.fill();
+    ctx.fillStyle = "white";
+    ctx.beginPath();
+    ctx.roundRect(155, y - 7, barWidth, 16, 4);
+    ctx.fill();
+
+    ctx.fillStyle = "rgba(255,255,255,0.9)";
+    ctx.textAlign = "left";
+    ctx.fillText(String(score), 375, y + 4);
+
+    y += 30;
+  }
+
+  // 底部
+  ctx.font = "12px -apple-system, BlinkMacSystemFont, sans-serif";
+  ctx.fillStyle = "rgba(255,255,255,0.4)";
+  ctx.textAlign = "right";
+  ctx.fillText("Personality Test Center", 520, 395);
+
+  shareImage.value = canvas.toDataURL("image/png");
+  showShareModal.value = true;
+};
+
 // 打印结果
 const printResults = () => {
   window.print();
@@ -763,15 +1040,19 @@ watch(locale, async (newLocale, oldLocale) => {
 });
 
 onMounted(() => {
-  // 什么都不做，等待密码验证通过
-  // 密码验证组件会在验证通过后调用 onPasswordVerified
+  window.addEventListener("keydown", handleKeydown);
+});
+
+onUnmounted(() => {
+  window.removeEventListener("keydown", handleKeydown);
+  stopTimer();
 });
 </script>
 
 <style scoped>
 .md-test {
   min-height: 100vh;
-  background: #f5f7fa;
+  background: var(--color-bg);
   position: relative;
 }
 
@@ -780,16 +1061,16 @@ onMounted(() => {
   align-items: center;
   justify-content: space-between;
   padding: 1.2rem 2rem;
-  background: white;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  background: var(--color-surface);
+  box-shadow: 0 2px 8px var(--color-card-shadow);
   position: relative;
   z-index: 10;
 }
 
 .nav-back {
-  background: white;
-  border: 2px solid #e0e7ff;
-  color: #6366f1;
+  background: var(--color-surface);
+  border: 2px solid var(--color-primary-light);
+  color: var(--color-primary);
   padding: 0.6rem 1.2rem;
   border-radius: 12px;
   cursor: pointer;
@@ -798,9 +1079,9 @@ onMounted(() => {
 }
 
 .nav-back:hover {
-  background: #6366f1;
+  background: var(--color-primary);
   color: white;
-  border-color: #6366f1;
+  border-color: var(--color-primary);
   transform: translateX(-4px);
 }
 
@@ -808,14 +1089,14 @@ onMounted(() => {
   font-size: 1.4rem;
   font-weight: 700;
   margin: 0;
-  color: #1e293b;
+  color: var(--color-text-heading);
 }
 
 .nav-progress {
   font-size: 0.95rem;
-  color: #64748b;
+  color: var(--color-text-muted);
   font-weight: 600;
-  background: #f1f5f9;
+  background: var(--color-divider);
   padding: 0.5rem 1rem;
   border-radius: 20px;
 }
@@ -834,35 +1115,31 @@ onMounted(() => {
 }
 
 .loading-card {
-  background: white;
+  background: var(--color-surface);
   border-radius: 20px;
   padding: 3rem;
   text-align: center;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 20px var(--color-card-shadow);
 }
 
 .loading-spinner {
   width: 50px;
   height: 50px;
-  border: 4px solid #e0e7ff;
-  border-top: 4px solid #6366f1;
+  border: 4px solid var(--color-primary-light);
+  border-top: 4px solid var(--color-primary);
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin: 0 auto 1rem;
 }
 
 .loading-card p {
-  color: #64748b;
+  color: var(--color-text-muted);
   font-weight: 500;
 }
 
 @keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 /* 介绍页面样式 */
@@ -871,11 +1148,11 @@ onMounted(() => {
 }
 
 .intro-card {
-  background: white;
+  background: var(--color-surface);
   border-radius: 24px;
   padding: 3rem;
   text-align: center;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 20px var(--color-card-shadow);
 }
 
 .intro-header {
@@ -892,12 +1169,12 @@ onMounted(() => {
   font-size: 2.5rem;
   margin-bottom: 0.8rem;
   font-weight: 800;
-  color: #1e293b;
+  color: var(--color-text-heading);
 }
 
 .test-subtitle {
   font-size: 1.2rem;
-  color: #64748b;
+  color: var(--color-text-muted);
   margin-bottom: 2rem;
   font-weight: 500;
 }
@@ -905,14 +1182,14 @@ onMounted(() => {
 .intro-content {
   text-align: left;
   margin-bottom: 2rem;
-  background: #f8fafc;
+  background: var(--color-surface-hover);
   padding: 2rem;
   border-radius: 16px;
-  border-left: 4px solid #6366f1;
+  border-left: 4px solid var(--color-primary);
 }
 
 .intro-content :deep(h3) {
-  color: #6366f1;
+  color: var(--color-primary);
   margin-bottom: 1rem;
   font-weight: 700;
 }
@@ -920,12 +1197,12 @@ onMounted(() => {
 .intro-content :deep(p) {
   line-height: 1.8;
   margin-bottom: 1rem;
-  color: #475569;
+  color: var(--color-text-secondary);
 }
 
 .intro-content :deep(ul) {
   margin-left: 1.5rem;
-  color: #475569;
+  color: var(--color-text-secondary);
   line-height: 1.8;
 }
 
@@ -941,10 +1218,10 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 0.6rem;
-  background: #f1f5f9;
+  background: var(--color-divider);
   padding: 0.8rem 1.5rem;
   border-radius: 12px;
-  color: #475569;
+  color: var(--color-text-secondary);
   font-weight: 600;
 }
 
@@ -953,7 +1230,7 @@ onMounted(() => {
 }
 
 .start-btn {
-  background: #6366f1;
+  background: var(--color-primary);
   color: white;
   border: none;
   padding: 1.1rem 3rem;
@@ -967,7 +1244,7 @@ onMounted(() => {
 }
 
 .start-btn:hover {
-  background: #4f46e5;
+  background: var(--color-primary-hover);
   transform: translateY(-2px);
   box-shadow: 0 8px 20px rgba(99, 102, 241, 0.4);
 }
@@ -982,41 +1259,50 @@ onMounted(() => {
   align-items: center;
   gap: 1rem;
   margin-bottom: 2rem;
-  background: white;
+  background: var(--color-surface);
   padding: 1rem 1.5rem;
   border-radius: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 2px 8px var(--color-card-shadow);
   position: relative;
+  flex-wrap: wrap;
 }
 
 .progress-bar {
   flex: 1;
   height: 10px;
-  background: #e0e7ff;
+  background: var(--color-primary-light);
   border-radius: 10px;
   overflow: hidden;
+  min-width: 120px;
 }
 
 .progress-fill {
   height: 100%;
-  background: #6366f1;
+  background: var(--color-primary);
   transition: width 0.3s ease;
   border-radius: 10px;
 }
 
 .progress-text {
   font-weight: 700;
-  color: #6366f1;
+  color: var(--color-primary);
   min-width: 80px;
   text-align: right;
 }
 
+.timer-display {
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
 .auto-save-hint {
   font-size: 0.85rem;
-  color: #10b981;
+  color: var(--color-success);
   font-weight: 600;
   padding: 0.25rem 0.75rem;
-  background: #d1fae5;
+  background: var(--color-success-light);
   border-radius: 8px;
   display: flex;
   align-items: center;
@@ -1025,38 +1311,32 @@ onMounted(() => {
 }
 
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-5px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .question-card {
-  background: white;
+  background: var(--color-surface);
   border-radius: 24px;
   padding: 3rem;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 20px var(--color-card-shadow);
 }
 
 .question-number {
-  color: #6366f1;
+  color: var(--color-primary);
   font-weight: 700;
   margin-bottom: 1rem;
   font-size: 1.1rem;
 }
 
 .question-context {
-  background: #fef3c7;
+  background: var(--color-warning-light);
   padding: 1rem 1.5rem;
   border-radius: 12px;
   margin-bottom: 1.5rem;
   font-style: italic;
   color: #92400e;
-  border-left: 4px solid #f59e0b;
+  border-left: 4px solid var(--color-warning);
 }
 
 .question-text {
@@ -1064,7 +1344,7 @@ onMounted(() => {
   font-weight: 700;
   margin-bottom: 2rem;
   line-height: 1.5;
-  color: #1e293b;
+  color: var(--color-text-heading);
 }
 
 .options-container {
@@ -1075,8 +1355,8 @@ onMounted(() => {
 }
 
 .option-item {
-  background: #f8fafc;
-  border: 2px solid #e2e8f0;
+  background: var(--color-surface-hover);
+  border: 2px solid var(--color-border);
   border-radius: 16px;
   padding: 1.5rem;
   cursor: pointer;
@@ -1084,14 +1364,14 @@ onMounted(() => {
 }
 
 .option-item:hover {
-  background: #f1f5f9;
-  border-color: #cbd5e1;
+  background: var(--color-divider);
+  border-color: var(--color-border-hover);
   transform: translateX(4px);
 }
 
 .option-item.selected {
-  background: #ede9fe;
-  border-color: #6366f1;
+  background: var(--color-primary-bg);
+  border-color: var(--color-primary);
   transform: translateX(8px);
   box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
 }
@@ -1104,7 +1384,7 @@ onMounted(() => {
 
 .option-letter {
   font-weight: 700;
-  color: #6366f1;
+  color: var(--color-primary);
   min-width: 28px;
   font-size: 1.1rem;
 }
@@ -1113,7 +1393,20 @@ onMounted(() => {
   font-size: 1.05rem;
   line-height: 1.6;
   flex: 1;
-  color: #475569;
+  color: var(--color-text-secondary);
+}
+
+.option-key-hint {
+  font-size: 0.75rem;
+  color: var(--color-text-sub);
+  background: var(--color-divider);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  padding: 2px 7px;
+  font-weight: 600;
+  min-width: 20px;
+  text-align: center;
+  align-self: center;
 }
 
 .navigation-buttons {
@@ -1133,14 +1426,14 @@ onMounted(() => {
 }
 
 .prev-btn {
-  background: white;
-  color: #6366f1;
-  border: 2px solid #e0e7ff;
+  background: var(--color-surface);
+  color: var(--color-primary);
+  border: 2px solid var(--color-primary-light);
 }
 
 .prev-btn:hover:not(:disabled) {
-  background: #f1f5f9;
-  border-color: #6366f1;
+  background: var(--color-divider);
+  border-color: var(--color-primary);
 }
 
 .prev-btn:disabled {
@@ -1149,24 +1442,24 @@ onMounted(() => {
 }
 
 .cancel-btn {
-  background: white;
-  color: #ef4444;
-  border: 2px solid #fee2e2;
+  background: var(--color-surface);
+  color: var(--color-danger);
+  border: 2px solid var(--color-danger-light);
 }
 
 .cancel-btn:hover {
-  background: #fef2f2;
-  border-color: #ef4444;
+  background: var(--color-danger-light);
+  border-color: var(--color-danger);
 }
 
 .next-btn {
-  background: #6366f1;
+  background: var(--color-primary);
   color: white;
   box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
 }
 
 .next-btn:hover:not(:disabled) {
-  background: #4f46e5;
+  background: var(--color-primary-hover);
   transform: translateY(-2px);
   box-shadow: 0 6px 16px rgba(99, 102, 241, 0.4);
 }
@@ -1179,6 +1472,17 @@ onMounted(() => {
 /* 结果页面样式 */
 .results-section {
   padding: 2rem 0;
+  position: relative;
+}
+
+.confetti-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 9999;
+  pointer-events: none;
 }
 
 .saved-notice {
@@ -1200,21 +1504,15 @@ onMounted(() => {
 }
 
 @keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .results-card {
-  background: white;
+  background: var(--color-surface);
   border-radius: 24px;
   padding: 3rem;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 20px var(--color-card-shadow);
 }
 
 .action-buttons {
@@ -1222,6 +1520,7 @@ onMounted(() => {
   justify-content: center;
   gap: 1rem;
   margin-top: 3rem;
+  flex-wrap: wrap;
 }
 
 .action-btn {
@@ -1232,33 +1531,37 @@ onMounted(() => {
   font-weight: 700;
   cursor: pointer;
   transition: all 0.3s ease;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .action-btn.secondary {
-  background: white;
-  color: #6366f1;
-  border: 2px solid #e0e7ff;
+  background: var(--color-surface);
+  color: var(--color-primary);
+  border: 2px solid var(--color-primary-light);
 }
 
 .action-btn.secondary:hover {
-  background: #f1f5f9;
-  border-color: #6366f1;
+  background: var(--color-divider);
+  border-color: var(--color-primary);
 }
 
 .action-btn.primary {
-  background: #6366f1;
+  background: var(--color-primary);
   color: white;
   box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
 }
 
 .action-btn.primary:hover {
-  background: #4f46e5;
+  background: var(--color-primary-hover);
   transform: translateY(-2px);
   box-shadow: 0 6px 16px rgba(99, 102, 241, 0.4);
 }
 
 .action-btn.print {
-  background: #10b981;
+  background: var(--color-success);
   color: white;
   box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
 }
@@ -1269,16 +1572,73 @@ onMounted(() => {
   box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
 }
 
+.action-btn.share {
+  background: var(--color-info);
+  color: white;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.action-btn.share:hover {
+  background: #2563eb;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+}
+
 .btn-icon {
   margin-right: 0.5rem;
   font-size: 1.2em;
+}
+
+/* Share modal */
+.share-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: var(--color-overlay);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+}
+
+.share-modal {
+  background: var(--color-surface);
+  border-radius: 20px;
+  padding: 2rem;
+  max-width: 620px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.share-modal h3 {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  color: var(--color-text-heading);
+}
+
+.share-image {
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid var(--color-border);
+}
+
+.share-modal-actions {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1.5rem;
 }
 
 /* 打印样式 */
 @media print {
   .test-nav,
   .action-buttons,
-  .particle-background {
+  .particle-background,
+  .confetti-canvas,
+  .share-modal-overlay {
     display: none !important;
   }
 
@@ -1288,7 +1648,7 @@ onMounted(() => {
 
   .results-card {
     box-shadow: none;
-    border: 1px solid #e0e7ff;
+    border: 1px solid var(--color-border);
     padding: 1.5rem;
   }
 

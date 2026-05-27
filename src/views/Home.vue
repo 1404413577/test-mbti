@@ -27,6 +27,14 @@
             >
               {{ t("home.learnMore") }}
             </el-button>
+            <el-button
+              size="large"
+              plain
+              class="history-btn"
+              @click="$router.push('/test-history')"
+            >
+              📊 History
+            </el-button>
           </div>
 
           <el-row class="hero-stats" :gutter="20">
@@ -363,6 +371,13 @@ const goToOverview = () => router.push("/test-overview");
   font-weight: 600;
   color: #475569;
   border-color: #cbd5e1;
+}
+
+.history-btn {
+  padding: 0 2rem;
+  font-weight: 600;
+  color: #6366f1;
+  border-color: #e0e7ff;
 }
 
 .hero-stats {
