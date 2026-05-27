@@ -97,6 +97,15 @@
         "accuracyLabel": "91%准确",
         "tags": ["心理韧性", "抗压能力", "情绪管理"],
         "featured": false
+      },
+      "sexualOrientation": {
+        "title": "性取向光谱评估",
+        "description": "基于 Klein 性取向网格理论，从异性吸引、同性吸引、情感联结、自我认同四个维度帮助您理解自己的性取向光谱位置。包含20道精心设计的题目，不贴标签、不设评判，仅用于自我探索。",
+        "duration": "10-15分钟",
+        "questionsLabel": "20题",
+        "accuracyLabel": "90%准确",
+        "tags": ["性取向", "自我认知", "光谱评估"],
+        "featured": false
       }
     },
     "infoCards": [

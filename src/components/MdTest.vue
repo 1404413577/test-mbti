@@ -196,6 +196,7 @@ import HollandResults from "./results/HollandResults.vue";
 import EnneagramResults from './results/EnneagramResults.vue'
 import DiscResults from './results/DiscResults.vue'
 import ResilienceResults from './results/ResilienceResults.vue'
+import SexualOrientationResults from './results/SexualOrientationResults.vue'
 
 const route = useRoute();
 const router = useRouter();
@@ -277,6 +278,14 @@ const testConfigs = {
     duration: "8-12",
     accuracy: "91%",
     file: "/md/resilience-questions.md",
+  },
+  "sexual-orientation": {
+    title: "性取向光谱评估",
+    subtitle: "基于多元光谱理论，理解自己的性取向倾向",
+    icon: "🌈",
+    duration: "10-15",
+    accuracy: "90%",
+    file: "/md/sexual-orientation-questions.md",
   },
 };
 
@@ -716,6 +725,8 @@ const getResultComponent = () => {
       return DiscResults;
     case "resilience":
       return ResilienceResults;
+    case "sexual-orientation":
+      return SexualOrientationResults;
     default:
       return MBTIResults;
   }

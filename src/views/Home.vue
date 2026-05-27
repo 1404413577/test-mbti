@@ -154,7 +154,7 @@ const testMeta = {
     id: "big-five-md",
     route: "/md-test/big-five",
     filePath: "/big-five-questions.md",
-    imageKey: "big-five",
+    imageKey: "big",
   },
   holland: {
     id: "holland-md",
@@ -180,6 +180,13 @@ const testMeta = {
     route: "/md-test/resilience",
     filePath: "/resilience-questions.md",
     imageKey: "resilience",
+    imageExt: "svg",
+  },
+  sexualOrientation: {
+    id: "sexual-orientation-md",
+    route: "/md-test/sexual-orientation",
+    filePath: "/sexual-orientation-questions.md",
+    imageKey: "sexual-orientation",
     imageExt: "svg",
   },
 };
@@ -216,6 +223,11 @@ const defaultTestsData = {
     featured: false,
     duration: "8-12分钟",
     accuracyLabel: "91% 信度",
+  },
+  sexualOrientation: {
+    featured: false,
+    duration: "10-15分钟",
+    accuracyLabel: "90% 信度",
   },
 };
 

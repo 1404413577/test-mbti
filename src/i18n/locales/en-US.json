@@ -97,6 +97,15 @@
         "accuracyLabel": "91% accuracy",
         "tags": ["Resilience", "Stress Management", "Mental Health"],
         "featured": false
+      },
+      "sexualOrientation": {
+        "title": "Sexual Orientation Spectrum",
+        "description": "Based on the Klein Sexual Orientation Grid, explore your orientation across four dimensions: opposite-sex attraction, same-sex attraction, emotional bonding, and self-identification. Includes 20 thoughtfully designed questions — no labels, no judgment, just self-exploration.",
+        "duration": "10-15 mins",
+        "questionsLabel": "20 questions",
+        "accuracyLabel": "90% accuracy",
+        "tags": ["Sexual Orientation", "Self-Discovery", "Spectrum"],
+        "featured": false
       }
     },
     "infoCards": [
