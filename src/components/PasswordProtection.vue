@@ -95,7 +95,23 @@ const checkPasswordVerification = () => {
   return false
 }
 
+// 检查是否已激活（商业版）
+const checkActivation = () => {
+  try {
+    const data = JSON.parse(localStorage.getItem('app_activation'))
+    return !!(data && data.code)
+  } catch (_) {
+    return false
+  }
+}
+
 onMounted(() => {
+  // 已激活的产品直接跳过密码
+  if (checkActivation()) {
+    isVerified.value = true
+    emit('verified')
+    return
+  }
   if (checkPasswordVerification()) {
     emit('verified')
   }

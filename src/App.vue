@@ -1,18 +1,24 @@
 <template>
   <div id="app">
-    <header class="lang-bar">
-      <button class="music-toggle" @click="toggleMusic" :title="isMusicOn ? '暂停音乐' : '播放音乐'">
-        {{ isMusicOn ? '🔊' : '🔇' }}
-      </button>
-      <button class="theme-toggle" @click="toggleTheme" :title="isDark ? 'Switch to light' : 'Switch to dark'">
-        {{ isDark ? '☀️' : '🌙' }}
-      </button>
-      <select v-model="locale" @change="onChange">
-        <option value="zh-CN">中文 (简体)</option>
-        <option value="en-US">English</option>
-      </select>
-    </header>
-    <router-view />
+    <!-- 未激活 → 显示激活页面 -->
+    <ActivationGate v-if="!isActivated" @enter="onActivated" />
+
+    <!-- 已激活 → 正常应用 -->
+    <template v-else>
+      <header class="lang-bar">
+        <button class="music-toggle" @click="toggleMusic" :title="isMusicOn ? '暂停音乐' : '播放音乐'">
+          {{ isMusicOn ? '🔊' : '🔇' }}
+        </button>
+        <button class="theme-toggle" @click="toggleTheme" :title="isDark ? 'Switch to light' : 'Switch to dark'">
+          {{ isDark ? '☀️' : '🌙' }}
+        </button>
+        <select v-model="locale" @change="onChange">
+          <option value="zh-CN">中文 (简体)</option>
+          <option value="en-US">English</option>
+        </select>
+      </header>
+      <router-view />
+    </template>
   </div>
 </template>
 
@@ -67,12 +73,15 @@ import { ref, watch, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { setLocale } from '@/i18n'
 import { useBackgroundMusic } from '@/composables/useBackgroundMusic'
+import { useActivation } from '@/composables/useActivation'
+import ActivationGate from '@/components/ActivationGate.vue'
 
 const { locale: i18nLocale } = useI18n()
 const locale = ref(i18nLocale.value)
 const isDark = ref(false)
 
 const { isPlaying: isMusicOn, toggle: toggleMusic, restore: restoreMusic } = useBackgroundMusic()
+const { isActivated } = useActivation()
 
 const onChange = () => {
   setLocale(locale.value)
@@ -90,6 +99,11 @@ const applyTheme = () => {
 const toggleTheme = () => {
   isDark.value = !isDark.value
   applyTheme()
+}
+
+const onActivated = () => {
+  // 激活后路由到首页
+  window.location.reload()
 }
 
 onMounted(() => {

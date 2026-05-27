@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>激活码生成器 - Personality Test Center</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+    .container {
+      background: #1e293b;
+      border-radius: 20px;
+      padding: 3rem;
+      max-width: 500px;
+      width: 90%;
+      text-align: center;
+    }
+    h1 { font-size: 1.5rem; margin-bottom: 0.5rem; }
+    .sub { color: #94a3b8; font-size: 0.9rem; margin-bottom: 2rem; }
+    .code-display {
+      background: #0f172a;
+      border: 2px dashed #334155;
+      border-radius: 12px;
+      padding: 1.5rem;
+      font-family: 'Courier New', monospace;
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #818cf8;
+      letter-spacing: 2px;
+      margin-bottom: 1.5rem;
+      min-height: 4rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      word-break: break-all;
+    }
+    .code-display.empty { color: #475569; font-size: 1rem; font-weight: 400; }
+    button {
+      background: #6366f1;
+      color: white;
+      border: none;
+      padding: 0.9rem 2rem;
+      font-size: 1rem;
+      font-weight: 700;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.25s;
+      margin: 0.5rem;
+    }
+    button:hover { background: #4f46e5; transform: translateY(-1px); }
+    button.copy { background: #10b981; }
+    button.copy:hover { background: #059669; }
+    .history { margin-top: 2rem; text-align: left; }
+    .history h3 { font-size: 0.95rem; margin-bottom: 0.75rem; color: #94a3b8; }
+    .history-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.6rem 0;
+      border-bottom: 1px solid #1e293b;
+      font-family: 'Courier New', monospace;
+      font-size: 0.9rem;
+    }
+    .history-item .time { color: #64748b; font-size: 0.75rem; }
+    .toast {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #10b981;
+      color: white;
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      font-weight: 600;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .toast.show { opacity: 1; }
+  </style>
+</head>
+<body>
+  <div class="toast" id="toast">已复制到剪贴板</div>
+  <div class="container">
+    <h1>激活码生成器</h1>
+    <p class="sub">Personality Test Center · 一次买断授权</p>
+
+    <div class="code-display" id="display" class="empty">点击生成按钮</div>
+
+    <div>
+      <button onclick="generate()">生成新激活码</button>
+      <button class="copy" onclick="copyCode()">复制</button>
+    </div>
+
+    <div class="history">
+      <h3>生成记录</h3>
+      <div id="history"></div>
+    </div>
+  </div>
+
+  <script>
+    // 与前端验证逻辑一致
+
+    // 随机大写字母或数字
+    function randChar() {
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+      return chars[Math.floor(Math.random() * chars.length)]
+    }
+
+    // 验证16位raw code
+    function validate(raw) {
+      if (!/^MBTI[A-Z0-9]{12}$/.test(raw)) return false
+      let sum = 0
+      for (let i = 0; i < raw.length; i++) {
+        const w = i % 2 === 0 ? 7 : 13
+        sum += raw.charCodeAt(i) * w
+      }
+      return sum % 97 === 1
+    }
+
+    // 格式化
+    function format(raw) {
+      return raw.slice(0, 6) + '-' + raw.slice(6, 10) + '-' +
+             raw.slice(10, 14) + '-' + raw.slice(14, 18)
+    }
+
+    // 生成一个有效激活码
+    function generateOne() {
+      let attempts = 0
+      while (attempts < 10000) {
+        let suffix = ''
+        for (let i = 0; i < 12; i++) suffix += randChar()
+        const raw = 'MBTI' + suffix
+        if (validate(raw)) {
+          return { raw, formatted: format(raw) }
+        }
+        attempts++
+      }
+      return null
+    }
+
+    const history = []
+    const display = document.getElementById('display')
+    const historyEl = document.getElementById('history')
+
+    function render() {
+      if (history.length === 0) {
+        display.textContent = '点击生成按钮'
+        display.className = 'code-display empty'
+      }
+    }
+
+    window.generate = function() {
+      const code = generateOne()
+      if (!code) {
+        display.textContent = '生成失败，请重试'
+        return
+      }
+      display.textContent = code.formatted
+      display.className = 'code-display'
+
+      history.unshift({ code: code.formatted, time: new Date().toLocaleString() })
+      if (history.length > 20) history.length = 20
+      updateHistory()
+    }
+
+    window.copyCode = function() {
+      const text = display.textContent
+      if (!text || text === '点击生成按钮') return
+      navigator.clipboard.writeText(text).then(() => {
+        const toast = document.getElementById('toast')
+        toast.className = 'toast show'
+        setTimeout(() => { toast.className = 'toast' }, 1500)
+      })
+    }
+
+    function updateHistory() {
+      historyEl.innerHTML = history.map(h =>
+        `<div class="history-item">
+          <span>${h.code}</span>
+          <span class="time">${h.time}</span>
+        </div>`
+      ).join('')
+    }
+
+    render()
+    updateHistory()
+  </script>
+</body>
+</html>
