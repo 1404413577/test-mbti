@@ -1,4 +1,4 @@
-name: Deploy to GitHub Pages and Gitee
+name: Deploy to GitHub Pages
 
 on:
   push:
@@ -36,7 +36,6 @@ jobs:
       - name: Build project
         run: npm run build
 
-      # --- 1. 部署到 GitHub Pages ---
       - name: Setup Pages
         uses: actions/configure-pages@v4
 
@@ -48,23 +47,3 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
-
-      # --- 2. 终极稳妥版：使用 HTTPS Token 部署到 Gitee Pages ---
-      # --- 2. 终极稳妥版：使用 HTTPS Token 部署到 Gitee Pages ---
-      - name: Deploy to Gitee Pages
-        env:
-          # 将 secret 转化为环境变量，更安全可靠
-          GITEE_TOKEN: ${{ secrets.GITEE_TOKEN }}
-        run: |
-          # 核心防卡死指令：彻底禁用 Git 的等待输入密码弹窗！如果 Token 无效直接报错！
-          export GIT_TERMINAL_PROMPT=0
-          
-          cd dist
-          git init
-          git config user.name "GitHub Actions Bot"
-          git config user.email "actions@github.com"
-          git add .
-          git commit -m "Auto deploy to Gitee Pages"
-          
-          # 使用环境变量中的 Token 推送
-          git push --force https://hailang123:${GITEE_TOKEN}@gitee.com/hailang123/test-mbti.git HEAD:gh-pages
